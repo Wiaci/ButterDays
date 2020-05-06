@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="ProjectModuleManager">
+    <modules>
+      <module fileurl="file://$PROJECT_DIR$/AwesomeServer/AwesomeServer.iml" filepath="$PROJECT_DIR$/AwesomeServer/AwesomeServer.iml" />
+      <module fileurl="file://$PROJECT_DIR$/NiceClient/NiceClient.iml" filepath="$PROJECT_DIR$/NiceClient/NiceClient.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/NiceClientAwesomeServer.iml" filepath="$PROJECT_DIR$/.idea/NiceClientAwesomeServer.iml" />
+    </modules>
+  </component>
+</project>
