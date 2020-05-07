@@ -2,9 +2,13 @@ import java.io.*;
 import java.net.*;
 import java.nio.ByteBuffer;
 import java.nio.channels.DatagramChannel;
+import java.util.logging.Logger;
 
-public class Server {
+public class ServerMain {
     public static void main(String[] args) throws IOException {
+        /*AwesomeServer awesomeServer = new AwesomeServer();
+        awesomeServer.run();
+*/
         DatagramChannel server = DatagramChannel.open();
         InetSocketAddress iAdd = new InetSocketAddress("localhost", 8989);
         server.bind(iAdd);
@@ -14,6 +18,7 @@ public class Server {
         while (true) {
             buffer.clear();
             SocketAddress remoteAdd = server.receive(buffer);
+            System.out.println(remoteAdd + "\n" + iAdd);
             //change mode of buffer
             buffer.flip();
             int limits = buffer.limit();
