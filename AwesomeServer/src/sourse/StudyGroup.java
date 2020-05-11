@@ -96,6 +96,10 @@ public class StudyGroup implements Comparable<StudyGroup>, Serializable {
         return averageMark;
     }
 
+    public static void addId(long id) {
+        idSet.add(id);
+    }
+
     @Override
     public int compareTo(StudyGroup studyGroup) {
         return studentsCount.compareTo(studyGroup.getStudentsCount());

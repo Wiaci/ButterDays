@@ -13,9 +13,7 @@ public class Client {
         DatagramChannel client = DatagramChannel.open();
         String msg = new Scanner(System.in).nextLine();
         ByteBuffer buffer = ByteBuffer.wrap(msg.getBytes());
-        InetSocketAddress serverAddress = new InetSocketAddress("localhost",
-                8989);
-
+        InetSocketAddress serverAddress = new InetSocketAddress("localhost", 8989);
         client.send(buffer, serverAddress);
         buffer.clear();
         client.receive(buffer);

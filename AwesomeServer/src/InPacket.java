@@ -5,7 +5,7 @@ import java.net.SocketAddress;
 public class InPacket implements Serializable {
     private String[] command;
     private StudyGroup studyGroup;
-    private SocketAddress socketAddress;
+    private transient SocketAddress socketAddress;
 
     public String[] getCommand() {
         return command;

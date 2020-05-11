@@ -1,9 +1,16 @@
 import java.io.Serializable;
 
-public class OutPacket<T> implements Serializable {
-    T value;
+public class OutPacket implements Serializable {
 
-    public void setValue(T value) {
-        this.value = value;
+    String response;
+
+    public OutPacket(String response) {
+        this.response = response;
+    }
+
+    public OutPacket() {}
+
+    public void setValue(String response) {
+        this.response = response;
     }
 }

@@ -46,6 +46,10 @@ public class Person implements Serializable {
         return passportID;
     }
 
+    public static void addPassportId(String passportID) {
+        passportIDSet.add(passportID);
+    }
+
     @Override
     public String toString() {
         return "sourse.Person{" +

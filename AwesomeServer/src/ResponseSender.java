@@ -11,7 +11,7 @@ public class ResponseSender {
         this.channel = channel;
     }
 
-    public void sendResponse(OutPacket<?> packet, SocketAddress address) {
+    public void sendResponse(OutPacket packet, SocketAddress address) {
         try {
             byte[] codedPacket = serialize(packet);
             ByteBuffer buffer = ByteBuffer.wrap(codedPacket);
@@ -27,7 +27,7 @@ public class ResponseSender {
 
     }
 
-    public byte[] serialize(OutPacket<?> packet) throws IOException, ClassNotFoundException {
+    public byte[] serialize(OutPacket packet) throws IOException, ClassNotFoundException {
         ByteArrayOutputStream byteArrayStream = new ByteArrayOutputStream();
         ObjectOutputStream outputStream = new ObjectOutputStream(byteArrayStream);
         outputStream.writeObject(packet);
