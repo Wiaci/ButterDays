@@ -59,22 +59,22 @@ public class UserMagicInteract {
         String[] strings = response.split(" ");
         if (strings.length < 3){
             System.out.println("Элемент успешно добавлен.");
-        } else if(strings[3] == "id" ){
+        } else if(strings[3].equals("id")  ){
             System.out.println("Элемент успешно не добавлен так как id неверный.");
-        } else if(strings[3] == "passport" ){ System.out.println("Элемент успешно не добавлен так как passportId неверный.");
+        } else if(strings[3].equals("passport")  ){ System.out.println("Элемент успешно не добавлен так как passportId неверный.");
         } else System.out.println("Элемент успешно не добавлен так как элемент не является максимальным.");
     }
     private void update(String response) {
         String[] strings = response.split(" ");
         if (strings.length < 3){
             System.out.println("3начение элемента успешно обновлено.");
-        } else if(strings[3] == "id" ){
+        } else if(strings[3].equals("id")  ){
             System.out.println("3начение элемента успешно не обновлено так как id неверный.");
         } else System.out.println("3начение элемента успешно не обновлено так как passportId неверный.");
     }
     private void removeByID(String response) {
         String[] strings = response.split(" ");
-        if (strings[2] == "Succeed" ){
+        if (strings[2].equals("Succeed") ){
             System.out.println("Элемент удалён.");
         } else System.out.println("У админа папа депутат. Ни в коем случае нельзя удалять!");
     }
