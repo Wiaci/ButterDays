@@ -21,6 +21,7 @@ public class UserMagicInteract {
 
     public void printResponse(AwesomeToNicePacket packet) {
         String response = packet.getResponse();
+        System.out.println(response);
         switch (response.split(" ")[0]) {
             case "info": info(response);
             case "show": show(response);
@@ -41,9 +42,11 @@ public class UserMagicInteract {
 
     private void info(String response) {
         String[] strings = response.split(" ");
+        char[] sth = response.toCharArray();
+
         System.out.println("Дата иницализации коллекции: " + strings[1]);
         System.out.println("Тип коллекции: LinkedList");
-        System.out.println("Количество элементов в коллекции: " + strings[2]);
+        System.out.println("Количество элементов в коллекции: " + strings[1]);
     }
     private void show(String response) {
         String[] strings = response.split(" ");

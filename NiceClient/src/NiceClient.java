@@ -8,6 +8,7 @@ public class NiceClient {
 
     public void run() throws IOException, CtrlDException {
         try (DatagramChannel clientChannel = DatagramChannel.open()) {
+            clientChannel.configureBlocking(false);
             InetSocketAddress serverAddress = new InetSocketAddress("localhost", 8000);
             ResponseAcceptor responseAcceptor = new ResponseAcceptor(clientChannel);
             UserMagicInteract user =
