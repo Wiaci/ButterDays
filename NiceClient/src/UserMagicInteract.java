@@ -25,6 +25,17 @@ public class UserMagicInteract {
             case "info": info(response);
             case "show": show(response);
             case "add": add(response);
+            case "update": update(response);
+            case "remove_by_id": removeByID(response);
+            case "clear": clear();
+            case "head": head(response);
+            case "average_of_average_mark": averageOfAverageMark(response);
+            case "add_if_max": add(response);
+            case "count_less_than_form_of_education": countLessAndSoOn(response);
+            case "print_field_ascending_semester_enum": printFieldAndSoOn(response);
+
+
+
         }
     }
 
@@ -34,16 +45,72 @@ public class UserMagicInteract {
         System.out.println("Тип коллекции: LinkedList");
         System.out.println("Количество элементов в коллекции: " + strings[2]);
     }
-    private void show(String response) {}
-    private void add(String response) {}
-    private void update(String response) {}
-    private void removeByID(String response) {}
-    private void clear(String response) {}
-    private void head(String response) {}
-    private void averageOfAverageMark(String response) {}
-    private void countLessAndSoOn(String response) {}
-    private void printFieldAndSoOn(String response) {}
-    private void removeGreater(String response) {}
+    private void show(String response) {
+        String[] strings = response.split(" ");
+        System.out.println("Элементы коллекции: ");
+        for(int i = 1; i < strings.length; i++){
+            System.out.println(strings[i] + " ");
+        }
+        }
+    private void add(String response) {
+        String[] strings = response.split(" ");
+        if (strings.length < 3){
+            System.out.println("Элемент успешно добавлен.");
+        } else if(strings[3] == "id" ){
+            System.out.println("Элемент успешно не добавлен так как id неверный.");
+        } else if(strings[3] == "passport" ){ System.out.println("Элемент успешно не добавлен так как passportId неверный.");
+        } else System.out.println("Элемент успешно не добавлен так как элемент не является максимальным.");
+    }
+    private void update(String response) {
+        String[] strings = response.split(" ");
+        if (strings.length < 3){
+            System.out.println("3начение элемента успешно обновлено.");
+        } else if(strings[3] == "id" ){
+            System.out.println("3начение элемента успешно не обновлено так как id неверный.");
+        } else System.out.println("3начение элемента успешно не обновлено так как passportId неверный.");
+    }
+    private void removeByID(String response) {
+        String[] strings = response.split(" ");
+        if (strings[2] == "Succeed" ){
+            System.out.println("Элемент удалён.");
+        } else System.out.println("У админа папа депутат. Ни в коем случае нельзя удалять!");
+    }
+    private void clear() {
+        System.out.println("Природа очистилась на столько, что из StudyGroup все самоизолировались.");
+    }
+    private void head(String response) {
+        String[] strings = response.split(" ");
+        if (strings.length > 3){
+            System.out.println("Первый элемент: ");
+            for(int i = 1; i < strings.length; i++){
+            System.out.println(strings[i] + " ");
+            }
+        } System.out.println("Коллекция пустая, как полки с туалетной бумагой в магазине.");
+    }
+
+    private void removeGreater(String response) {
+        String[] strings = response.split(" ");
+        System.out.println("Удалённые элементы: ");
+        for(int i = 1; i < strings.length; i++){
+            System.out.println(strings[i] + " ");
+        }
+    }
+
+    private void averageOfAverageMark(String response) {
+        String[] strings = response.split(" ");
+        System.out.println("Среднее начение: " + strings[1] );
+    }
+    private void countLessAndSoOn(String response) {
+        String[] strings = response.split(" ");
+        System.out.println( strings[1] + " элементов меньше заданного.");
+    }
+    private void printFieldAndSoOn(String response) {
+        String[] strings = response.split(" ");
+        System.out.println("3начения в порядке ворастания:");
+        for(int i = 1; i < strings.length; i++){
+            System.out.println(strings[i] + ", ");
+        }
+    }
 
     //TODO методы
 
