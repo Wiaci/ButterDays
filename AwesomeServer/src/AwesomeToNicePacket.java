@@ -1,14 +1,14 @@
 import java.io.Serializable;
 
-public class OutPacket implements Serializable {
+public class AwesomeToNicePacket implements Serializable {
 
     String response;
 
-    public OutPacket(String response) {
+    public AwesomeToNicePacket(String response) {
         this.response = response;
     }
 
-    public OutPacket() {}
+    public AwesomeToNicePacket() {}
 
     public void setValue(String response) {
         this.response = response;

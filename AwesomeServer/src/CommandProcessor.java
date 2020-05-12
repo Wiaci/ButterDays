@@ -21,7 +21,7 @@ public class CommandProcessor {
         list.forEach(s -> Person.addPassportId(s.getGroupAdmin().getPassportID()));
     }
 
-    public OutPacket runCommand(InPacket packet) {
+    public AwesomeToNicePacket runCommand(NiceToAwesomePacket packet) {
         String command = packet.getCommand()[0];
         switch (command) {
             case "info": return info();
@@ -29,7 +29,7 @@ public class CommandProcessor {
             case "update": return update(packet.getCommand()[1], packet.getStudyGroup());
             case "show": return show();
             case "remove_by_id": return removeByID(packet.getCommand()[1]);
-            case "clear": clear(); return new OutPacket("Done");
+            case "clear": clear(); return new AwesomeToNicePacket("clear Done");
             case "head": return head();
             case "add_if_max": return addIfMax(packet.getStudyGroup());
             case "remove_greater": return removeGreater(packet.getStudyGroup());
@@ -40,28 +40,28 @@ public class CommandProcessor {
         return null;
     }
 
-    public OutPacket info() {
+    public AwesomeToNicePacket info() {
         String info = list.size() +
                 dateOfInitialization.toString();
-        return new OutPacket(info);
+        return new AwesomeToNicePacket("info " + info);
     }
 
-    public OutPacket show() {
+    public AwesomeToNicePacket show() {
         StringBuilder str = new StringBuilder();
         list.forEach(s -> str.append(s).append("\n"));
-        return new OutPacket(str.toString());
+        return new AwesomeToNicePacket("show " + str.toString());
     }
 
-    public OutPacket add(StudyGroup group) {
+    public AwesomeToNicePacket add(StudyGroup group) {
         if (!StudyGroup.getIdSet().contains(group.getId())) {
             if (!Person.getPassportIDSet().contains(group.getGroupAdmin().getPassportID())) {
                 list.add(group);
-                return new OutPacket("Succeed");
-            } else return new OutPacket("Failed passport");
-        } else return new OutPacket("Failed id");
+                return new AwesomeToNicePacket("add Succeed");
+            } else return new AwesomeToNicePacket("add Failed passport");
+        } else return new AwesomeToNicePacket("add Failed id");
     }
 
-    public OutPacket update(String id, StudyGroup group) {
+    public AwesomeToNicePacket update(String id, StudyGroup group) {
         if (!StudyGroup.getIdSet().contains(Long.parseLong(id))) {
             if (!Person.getPassportIDSet().stream()
                     .filter(x -> !x.equals(group.getGroupAdmin().getPassportID()))
@@ -70,12 +70,12 @@ public class CommandProcessor {
                 group.setId(Long.parseLong(id));
                 list.add(group);
                 StudyGroup.addId(Long.parseLong(id));
-                return new OutPacket("Succeed");
-            } else return new OutPacket("Failed passport");
+                return new AwesomeToNicePacket("update Succeed");
+            } else return new AwesomeToNicePacket("update Failed passport");
         }
-        return new OutPacket("Failed id");
+        return new AwesomeToNicePacket("update Failed id");
     }
-    public OutPacket removeByID(String id) {
+    public AwesomeToNicePacket removeByID(String id) {
         if (StudyGroup.getIdSet().contains(Long.parseLong(id))) {
             StudyGroup a = list.stream()
                     .filter(x -> x.getId() == Long.parseLong(id))
@@ -84,36 +84,36 @@ public class CommandProcessor {
             list.remove(a);
             StudyGroup.getIdSet().remove(a.getId());
             Person.getPassportIDSet().remove(a.getGroupAdmin().getPassportID());
-            return new OutPacket("Succeed");
-        } else return new OutPacket("Failed");
+            return new AwesomeToNicePacket("remove_by_id Succeed");
+        } else return new AwesomeToNicePacket("remove_by_id Failed");
     }
     public void clear() {
         list.clear();
         StudyGroup.clearIdList();
         Person.clearPassportIdList();
     }
-    public OutPacket head() {
+    public AwesomeToNicePacket head() {
         if (list.size() != 0) {
-            return new OutPacket(list.stream()
+            return new AwesomeToNicePacket(list.stream()
                     .findFirst()
                     .orElse(new StudyGroup())
                     .toString());
-        } else return new OutPacket("Nothing");
+        } else return new AwesomeToNicePacket("head Nothing");
     }
-    public OutPacket addIfMax(StudyGroup group) {
+    public AwesomeToNicePacket addIfMax(StudyGroup group) {
         if (list.stream().
                 noneMatch(x -> x.compareTo(group) > 0)) {
             return add(group);
-        } else return new OutPacket("Failed notMax");
+        } else return new AwesomeToNicePacket("add Failed notMax");
     }
-    public OutPacket removeGreater(StudyGroup group) {
+    public AwesomeToNicePacket removeGreater(StudyGroup group) {
         int startSize = list.size();
         list.stream()
                 .filter(x -> x.compareTo(group) > 0)
                 .forEach(list::remove);
-        return new OutPacket(Integer.toString(startSize - list.size()));
+        return new AwesomeToNicePacket("remove_greater " + Integer.toString(startSize - list.size()));
     }
-    public OutPacket averageOfAverageMark() {
+    public AwesomeToNicePacket averageOfAverageMark() {
         class Thing {
             Float sum;
             void addToSum(float a) {
@@ -122,19 +122,19 @@ public class CommandProcessor {
         }
         Thing thing = new Thing();
         list.forEach(x -> thing.addToSum(x.getAverageMark()));
-        return new OutPacket(Float.toString(thing.sum / list.size()));
+        return new AwesomeToNicePacket("average_of_average_mark " + Float.toString(thing.sum / list.size()));
     }
-    public OutPacket countLessAndSoOn(String formOfEducation) {
-        return new OutPacket(Long.toString(list.stream()
+    public AwesomeToNicePacket countLessAndSoOn(String formOfEducation) {
+        return new AwesomeToNicePacket("count_less_than_form_of_education " + Long.toString(list.stream()
                 .filter(x -> x
                         .getFormOfEducation()
                         .compareTo(FormOfEducation.valueOf(formOfEducation)) < 0)
                 .count()));
     }
-    public OutPacket printFieldAndSoOn() {
+    public AwesomeToNicePacket printFieldAndSoOn() {
         StringBuilder str = new StringBuilder();
         list.forEach(s -> str.append(s.getSemesterEnum()).append("\n"));
-        return new OutPacket(str.toString());
+        return new AwesomeToNicePacket("print_field_ascending_semester_enum " + str.toString());
     }
 
 }

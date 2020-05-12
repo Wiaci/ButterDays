@@ -6,10 +6,10 @@ import java.util.logging.Logger;
 
 public class ServerMain {
     public static void main(String[] args) throws IOException {
-        /*AwesomeServer awesomeServer = new AwesomeServer();
+        AwesomeServer awesomeServer = new AwesomeServer();
         awesomeServer.run();
-*/
-        DatagramChannel server = DatagramChannel.open();
+
+        /*DatagramChannel server = DatagramChannel.open();
         InetSocketAddress iAdd = new InetSocketAddress("localhost", 8989);
         server.bind(iAdd);
         System.out.println("Server Started: " + iAdd);
@@ -30,7 +30,7 @@ public class ServerMain {
             buffer.flip();
             server.send(buffer, remoteAdd);
         }
-        server.close();
+        server.close();*/
 
         /*byte[] bytes = new byte[10];
         SocketAddress address = new InetSocketAddress(8000);

@@ -13,13 +13,13 @@ public class AwesomeServer {
             System.out.println("Сервер совсем запустился...");
             ResponseSender responseSender = new ResponseSender(serverChannel);
             while (true) {
-                InPacket packet = requestReader.getNewPacket();
+                NiceToAwesomePacket packet = requestReader.getNewPacket();
                 if (packet.getCommand()[0].equals("exit")) break;
                 responseSender.sendResponse(
                         commandProcessor.runCommand(packet),
                         packet.getSocketAddress());
             }
-
+        //TODO streamCorrupted
         }
     }
 }
