@@ -2,7 +2,7 @@ import java.io.Serializable;
 
 public class AwesomeToNicePacket implements Serializable {
 
-    String response;
+    private String response;
 
     public AwesomeToNicePacket(String response) {
         this.response = response;
@@ -12,5 +12,9 @@ public class AwesomeToNicePacket implements Serializable {
 
     public void setValue(String response) {
         this.response = response;
+    }
+
+    public String getResponse() {
+        return response;
     }
 }

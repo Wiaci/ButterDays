@@ -17,7 +17,10 @@ public class ResponseAcceptor {
         ByteBuffer buffer = ByteBuffer.allocate(1024);
         buffer.clear();
         try {
-            SocketAddress address = channel.receive(buffer);
+            SocketAddress address;
+            do {
+                address = channel.receive(buffer);
+            } while (address == null);
             return deserialize(buffer.array());
         } catch (ClassNotFoundException e) {
             System.out.println("Класса неееет");

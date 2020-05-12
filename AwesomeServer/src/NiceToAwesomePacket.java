@@ -7,6 +7,15 @@ public class NiceToAwesomePacket implements Serializable {
     private StudyGroup studyGroup;
     private transient SocketAddress socketAddress;
 
+    public NiceToAwesomePacket(String[] command) {
+        this.command = command;
+    }
+
+    public NiceToAwesomePacket(String[] command, StudyGroup studyGroup) {
+        this.command = command;
+        this.studyGroup = studyGroup;
+    }
+
     public String[] getCommand() {
         return command;
     }

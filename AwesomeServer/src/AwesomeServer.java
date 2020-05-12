@@ -1,4 +1,7 @@
+import java.io.ByteArrayInputStream;
 import java.io.IOException;
+import java.io.ObjectInputStream;
+import java.net.DatagramPacket;
 import java.net.InetSocketAddress;
 import java.nio.channels.DatagramChannel;
 
@@ -6,6 +9,7 @@ public class AwesomeServer {
 
     public void run() throws IOException {
         try (DatagramChannel serverChannel = DatagramChannel.open()) {
+            serverChannel.configureBlocking(false);
             InetSocketAddress address = new InetSocketAddress("localhost", 8000);
             serverChannel.bind(address);
             RequestReader requestReader = new RequestReader(serverChannel);
@@ -22,4 +26,5 @@ public class AwesomeServer {
         //TODO streamCorrupted
         }
     }
+
 }

@@ -19,7 +19,7 @@ public class RequestCreator {
         try {
             byte[] codedPacket = serialize(packet);
             ByteBuffer buffer = ByteBuffer.wrap(codedPacket);
-            buffer.flip();
+            buffer.clear();
             channel.send(buffer, address);
         } catch (IOException e) {
             e.printStackTrace();
@@ -30,6 +30,7 @@ public class RequestCreator {
         ByteArrayOutputStream byteArrayStream = new ByteArrayOutputStream();
         ObjectOutputStream outputStream = new ObjectOutputStream(byteArrayStream);
         outputStream.writeObject(packet);
+        outputStream.flush();
         return byteArrayStream.toByteArray();
     }
 

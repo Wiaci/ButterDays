@@ -15,22 +15,20 @@ public class ResponseSender {
         try {
             byte[] codedPacket = serialize(packet);
             ByteBuffer buffer = ByteBuffer.wrap(codedPacket);
-            buffer.flip();
+            buffer.clear();
             channel.send(buffer, address);
         } catch (IOException e) {
             e.printStackTrace();
-        } catch (ClassNotFoundException e) {
-            System.out.println("А такого класса нет");
-
         }
 
 
     }
 
-    public byte[] serialize(AwesomeToNicePacket packet) throws IOException, ClassNotFoundException {
+    public byte[] serialize(AwesomeToNicePacket packet) throws IOException {
         ByteArrayOutputStream byteArrayStream = new ByteArrayOutputStream();
         ObjectOutputStream outputStream = new ObjectOutputStream(byteArrayStream);
         outputStream.writeObject(packet);
+        outputStream.flush();
         return byteArrayStream.toByteArray();
     }
 }

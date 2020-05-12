@@ -41,7 +41,7 @@ public class CommandProcessor {
     }
 
     public AwesomeToNicePacket info() {
-        String info = list.size() +
+        String info = list.size() + " " +
                 dateOfInitialization.toString();
         return new AwesomeToNicePacket("info " + info);
     }
@@ -62,7 +62,7 @@ public class CommandProcessor {
     }
 
     public AwesomeToNicePacket update(String id, StudyGroup group) {
-        if (!StudyGroup.getIdSet().contains(Long.parseLong(id))) {
+        if (StudyGroup.getIdSet().contains(Long.parseLong(id))) {
             if (!Person.getPassportIDSet().stream()
                     .filter(x -> !x.equals(group.getGroupAdmin().getPassportID()))
                     .collect(Collectors.toSet()).contains(group.getGroupAdmin().getPassportID())) {
