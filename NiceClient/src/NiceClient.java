@@ -1,47 +1,96 @@
-import java.io.BufferedReader;
-import java.io.IOException;
-import java.io.InputStreamReader;
+import java.io.*;
 import java.net.InetSocketAddress;
 import java.nio.channels.DatagramChannel;
+import java.util.HashMap;
+import java.util.LinkedList;
 
 public class NiceClient {
+
+    UserMagicInteract user;
+    ResponseAcceptor responseAcceptor;
+    RequestCreator requestCreator;
+    InetSocketAddress serverAddress = new InetSocketAddress("localhost", 8000);
 
     public void run() throws IOException, CtrlDException {
         try (DatagramChannel clientChannel = DatagramChannel.open()) {
             clientChannel.configureBlocking(false);
-            InetSocketAddress serverAddress = new InetSocketAddress("localhost", 8000);
-            ResponseAcceptor responseAcceptor = new ResponseAcceptor(clientChannel);
-            UserMagicInteract user =
-                    new UserMagicInteract(
-                            new BufferedReader(
-                                    new InputStreamReader(System.in)), false);
-            RequestCreator requestCreator = new RequestCreator(clientChannel, user);
+            user = new UserMagicInteract(
+                    new BufferedReader(
+                            new InputStreamReader(System.in)), false);
+            responseAcceptor = new ResponseAcceptor(clientChannel);
+            requestCreator = new RequestCreator(clientChannel, user);
             user.printHello();
-            while (true) {
+            boolean isInterrupted = false;
+            while (!isInterrupted) {
                 String[] newCommand = user.getNewCommand();
-                if (newCommand.length == 0) continue;
-                if (newCommand[0].equals("exit")) break;
-                if (newCommand[0].equals("help")) {
-                    user.help();
-                    continue;
-                }
-                if (newCommand[0].equals("execute_script") && newCommand.length > 1) {
-                    executeScript(newCommand[1]);
-                    continue;
-                }
-                if (!user.check(newCommand)) {
-                    System.out.println("Введи help и прозрей!");
-                    continue;
-                }
-                NiceToAwesomePacket packet = requestCreator.createPacket(newCommand);
-                requestCreator.sendResponse(packet, serverAddress);
-
-                AwesomeToNicePacket packet1 = responseAcceptor.getResponsePacket();
-                user.printResponse(packet1);
+                isInterrupted = launchCommand(newCommand);
             }
         }
     }
 
-    public void executeScript(String filename) {}
+    public boolean launchCommand(String[] newCommand) throws CtrlDException {
+        if (newCommand[0].equals("")) return false;
+        if (newCommand[0].equals("exit")) return true;
+        if (newCommand[0].equals("help")) {
+            user.help();
+            return false;
+        }
+        if (newCommand[0].equals("execute_script") && newCommand.length > 1) {
+            executeScript(newCommand[1]);
+            return false;
+        }
+        if (!user.check(newCommand)) {
+            System.out.println("Введи help и прозрей!");
+            return false;
+        }
+        NiceToAwesomePacket packet = requestCreator.createPacket(newCommand);
+        requestCreator.sendResponse(packet, serverAddress);
+
+        AwesomeToNicePacket packet1 = responseAcceptor.getResponsePacket();
+        user.printResponse(packet1);
+
+        return false;
+    }
+
+    LinkedList<String> listOfScripts = new LinkedList<>();
+    HashMap<String, String> problemFiles = new HashMap<>(); // мап с проблемными файлами и их вызовами
+    /**
+     * Метод для выполнения скрипта
+     * @param filename имя файла содержащего скрипт
+     */
+    private void executeScript(String filename) throws CtrlDException {
+        try {
+            System.out.println("'"+filename+"'");
+            BufferedReader reader = new BufferedReader(new FileReader(filename));
+            listOfScripts.add(filename);
+            String newLine;
+            user = new UserMagicInteract(reader, true);
+            do {
+                newLine = reader.readLine();
+                if (newLine == null) break;
+                newLine = newLine.trim();
+                if (!newLine.startsWith("execute_script") || !listOfScripts.contains(newLine.replaceFirst("execute_script", "").trim())) {
+                    launchCommand(newLine.split(" "));
+                } else problemFiles.put(filename, newLine.replaceFirst("execute_script", "").trim());
+                /*System.out.println(listOfScripts);*/
+            } while (true);
+        } catch (FileNotFoundException e) {
+            System.out.println("Такого файла нет");
+        } catch (IOException e) {
+            System.out.println("Я не знаю как вызвать это исключение");
+        } finally {
+            if (listOfScripts.size() > 0) listOfScripts.removeLast();
+            if (listOfScripts.size() == 0 && problemFiles.size() > 0) {
+                System.out.println("\n!!!\nУ вас рот в гов... Ой, то есть рекурсия в скрипте\n" +
+                        "В следующих файлах был обнаружен рекурсивный вызов:");
+                for (String i: problemFiles.keySet()) {
+                    System.out.println("\t" + i + " - вызов скрипта " + problemFiles.get(i));
+                }
+                System.out.println("!!!");
+                problemFiles.clear();
+            }
+            user = new UserMagicInteract(new BufferedReader(new InputStreamReader(System.in)), false);
+        }
+    }
 }
 //

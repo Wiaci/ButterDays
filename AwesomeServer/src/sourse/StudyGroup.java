@@ -45,25 +45,24 @@ public class StudyGroup implements Comparable<StudyGroup>, Serializable {
         this.semesterEnum = semesterEnum;
         this.groupAdmin = groupAdmin;
         creationDate = ZonedDateTime.now();
-        do {
-            id = (long) (Math.random() * 10000 + 1);
-        } while (idSet.contains(id));
-        idSet.add(id);
+    }
+
+    public String getName() {
+        return name;
     }
 
     @Override
     public String toString() {
-        return "sourse.StudyGroup{" +
-                "id=" + id +
-                ", name='" + name + '\'' +
-                ", coordinates=" + coordinates +
-                ", creationDate=" + creationDate +
-                ", studentsCount=" + studentsCount +
-                ", averageMark=" + averageMark +
-                ", formOfEducation=" + formOfEducation +
-                ", semesterEnum=" + semesterEnum +
-                ", groupAdmin=" + groupAdmin +
-                '}';
+        return "StudyGroup name\n" +
+                "\tid=" + id +
+                "\n\t coordinates=" + coordinates +
+                "\n\t creationDate=" + creationDate +
+                "\n\t studentsCount=" + studentsCount +
+                "\n\t averageMark=" + averageMark +
+                "\n\t formOfEducation=" + formOfEducation +
+                "\n\t semesterEnum=" + semesterEnum +
+                "\n\t groupAdmin=" + groupAdmin +
+                '\n';
     }
 
     public Person getGroupAdmin() {
@@ -98,6 +97,14 @@ public class StudyGroup implements Comparable<StudyGroup>, Serializable {
 
     public static void addId(long id) {
         idSet.add(id);
+    }
+
+    public static long generateRandomId() {
+        long randomId = 0L;
+        do {
+            randomId = (long) (Math.random() * 10000 + 1);
+        } while (idSet.contains(randomId));
+        return randomId;
     }
 
     @Override

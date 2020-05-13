@@ -16,65 +16,67 @@ public class UserMagicInteract {
     }
 
     public String[] getNewCommand() throws CtrlDException {
-        return getNewLine().split(" ");
+        return getNewLine().trim().split(" ");
     }
 
     public void printResponse(AwesomeToNicePacket packet) {
         String response = packet.getResponse();
         System.out.println(response);
-        switch (response.split(" ")[0]) {
-            case "info": info(response);
-            case "show": show(response);
-            case "add": add(response);
-            case "update": update(response);
-            case "remove_by_id": removeByID(response);
-            case "clear": clear();
-            case "head": head(response);
-            case "average_of_average_mark": averageOfAverageMark(response);
-            case "add_if_max": add(response);
-            case "count_less_than_form_of_education": countLessAndSoOn(response);
-            case "print_field_ascending_semester_enum": printFieldAndSoOn(response);
-
-
-
+        switch (response.split(" ", 3)[0]) {
+            case "info": info(response); break;
+            case "show": show(response); break;
+            case "add":
+            case "add_if_max":
+                add(response); break;
+            case "update": update(response); break;
+            case "remove_by_id": removeByID(response); break;
+            case "remove_greater": removeGreater(response); break;
+            case "clear": clear(); break;
+            case "head": head(response); break;
+            case "average_of_average_mark": averageOfAverageMark(response); break;
+            case "count_less_than_form_of_education": countLessAndSoOn(response); break;
+            case "print_field_ascending_semester_enum": printFieldAndSoOn(response); break;
         }
     }
 
     private void info(String response) {
         String[] strings = response.split(" ");
-        char[] sth = response.toCharArray();
-
-        System.out.println("Дата иницализации коллекции: " + strings[1]);
+        System.out.print("Дата иницализации коллекции: ");
+        for (int i = 2; i < strings.length; i++) {
+            System.out.print(strings[i] + " ");
+        }
+        System.out.println();
         System.out.println("Тип коллекции: LinkedList");
         System.out.println("Количество элементов в коллекции: " + strings[1]);
     }
     private void show(String response) {
         String[] strings = response.split(" ");
-        System.out.println("Элементы коллекции: ");
-        for(int i = 1; i < strings.length; i++){
-            System.out.println(strings[i] + " ");
-        }
+        if (strings.length > 1) {
+            System.out.println("Элементы коллекции: ");
+            for(int i = 1; i < strings.length; i++){
+                System.out.print(strings[i] + " ");
+            }
+            System.out.println();
+        } else System.out.println("Коллекция пуста");
         }
     private void add(String response) {
         String[] strings = response.split(" ");
         if (strings.length < 3){
-            System.out.println("Элемент успешно добавлен.");
-        } else if(strings[3].equals("id")  ){
-            System.out.println("Элемент успешно не добавлен так как id неверный.");
-        } else if(strings[3].equals("passport")  ){ System.out.println("Элемент успешно не добавлен так как passportId неверный.");
-        } else System.out.println("Элемент успешно не добавлен так как элемент не является максимальным.");
+            System.out.println("Элемент успешно добавлен");
+        } else if(strings[2].equals("passport")  ){ System.out.println("Элемент успешно не добавлен так как passportId неверный");
+        } else System.out.println("Элемент успешно не добавлен так как элемент не является максимальным");
     }
     private void update(String response) {
         String[] strings = response.split(" ");
         if (strings.length < 3){
             System.out.println("3начение элемента успешно обновлено.");
-        } else if(strings[3].equals("id")  ){
+        } else if(strings[2].equals("id")  ){
             System.out.println("3начение элемента успешно не обновлено так как id неверный.");
         } else System.out.println("3начение элемента успешно не обновлено так как passportId неверный.");
     }
     private void removeByID(String response) {
         String[] strings = response.split(" ");
-        if (strings[2].equals("Succeed") ){
+        if (strings[1].equals("Succeed") ){
             System.out.println("Элемент удалён.");
         } else System.out.println("У админа папа депутат. Ни в коем случае нельзя удалять!");
     }
@@ -101,7 +103,8 @@ public class UserMagicInteract {
 
     private void averageOfAverageMark(String response) {
         String[] strings = response.split(" ");
-        System.out.println("Среднее начение: " + strings[1] );
+        System.out.printf("Среднее начение: %.1f",  Float.parseFloat(strings[1]));
+        System.out.println();
     }
     private void countLessAndSoOn(String response) {
         String[] strings = response.split(" ");
@@ -109,13 +112,13 @@ public class UserMagicInteract {
     }
     private void printFieldAndSoOn(String response) {
         String[] strings = response.split(" ");
-        System.out.println("3начения в порядке ворастания:");
-        for(int i = 1; i < strings.length; i++){
-            System.out.println(strings[i] + ", ");
-        }
+        if (strings.length > 1) {
+            System.out.println("3начения в порядке ворастания:");
+            for(int i = 1; i < strings.length; i++){
+                System.out.println(strings[i] + ", ");
+            }
+        } else System.out.println("Семестры нигде не указаны");
     }
-
-    //TODO методы
 
     public void help() {
         System.out.println(
@@ -370,3 +373,6 @@ public class UserMagicInteract {
 }
 
 class CtrlDException extends Exception {}
+
+//StudyGroup qwe
+//      id =

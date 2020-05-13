@@ -3,8 +3,10 @@ import sourse.StudyGroup;
 import sourse.enums.FormOfEducation;
 
 import javax.xml.bind.annotation.*;
+import java.util.Comparator;
 import java.util.Date;
 import java.util.LinkedList;
+import java.util.List;
 import java.util.stream.Collectors;
 
 @XmlRootElement
@@ -48,17 +50,24 @@ public class CommandProcessor {
 
     public AwesomeToNicePacket show() {
         StringBuilder str = new StringBuilder();
-        list.forEach(s -> str.append(s).append("\n"));
+        list.stream()
+                .sorted((o1, o2) -> {
+                    if (o1.getName().compareTo(o2.getName()) > 0) return 1;
+                    else if (o1.getName().compareTo(o2.getName()) < 0) return -1;
+                    else return 0;
+                })
+                .forEach(x -> str.append(x.toString()).append("\n"));
+            ;
         return new AwesomeToNicePacket("show " + str.toString());
     }
 
     public AwesomeToNicePacket add(StudyGroup group) {
-        if (!StudyGroup.getIdSet().contains(group.getId())) {
-            if (!Person.getPassportIDSet().contains(group.getGroupAdmin().getPassportID())) {
-                list.add(group);
-                return new AwesomeToNicePacket("add Succeed");
-            } else return new AwesomeToNicePacket("add Failed passport");
-        } else return new AwesomeToNicePacket("add Failed id");
+        if (!Person.getPassportIDSet().contains(group.getGroupAdmin().getPassportID())) {
+            group.setId(StudyGroup.generateRandomId());
+            list.add(group);
+            StudyGroup.getIdSet().add(group.getId());
+            return new AwesomeToNicePacket("add Succeed");
+        } else return new AwesomeToNicePacket("add Failed passport");
     }
 
     public AwesomeToNicePacket update(String id, StudyGroup group) {
@@ -108,24 +117,22 @@ public class CommandProcessor {
     }
     public AwesomeToNicePacket removeGreater(StudyGroup group) {
         int startSize = list.size();
-        list.stream()
+        List<StudyGroup> greater = list.stream()
                 .filter(x -> x.compareTo(group) > 0)
-                .forEach(list::remove);
+                .collect(Collectors.toList());
+        greater.forEach(list::remove);
         return new AwesomeToNicePacket("remove_greater " + Integer.toString(startSize - list.size()));
     }
     public AwesomeToNicePacket averageOfAverageMark() {
-        class Thing {
-            Float sum;
-            void addToSum(float a) {
-                sum += a;
-            }
+        float sum = 0;
+        for (StudyGroup group : list) {
+            sum += group.getAverageMark();
         }
-        Thing thing = new Thing();
-        list.forEach(x -> thing.addToSum(x.getAverageMark()));
-        return new AwesomeToNicePacket("average_of_average_mark " + Float.toString(thing.sum / list.size()));
+        return new AwesomeToNicePacket("average_of_average_mark " + sum / list.size());
     }
     public AwesomeToNicePacket countLessAndSoOn(String formOfEducation) {
         return new AwesomeToNicePacket("count_less_than_form_of_education " + Long.toString(list.stream()
+                .filter(x -> x.getFormOfEducation() != null)
                 .filter(x -> x
                         .getFormOfEducation()
                         .compareTo(FormOfEducation.valueOf(formOfEducation)) < 0)

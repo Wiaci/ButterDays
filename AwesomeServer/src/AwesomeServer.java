@@ -4,6 +4,9 @@ import java.io.ObjectInputStream;
 import java.net.DatagramPacket;
 import java.net.InetSocketAddress;
 import java.nio.channels.DatagramChannel;
+import java.util.logging.Level;
+import java.util.logging.LogRecord;
+import java.util.logging.Logger;
 
 public class AwesomeServer {
 
@@ -18,12 +21,13 @@ public class AwesomeServer {
             ResponseSender responseSender = new ResponseSender(serverChannel);
             while (true) {
                 NiceToAwesomePacket packet = requestReader.getNewPacket();
+
                 if (packet.getCommand()[0].equals("exit")) break;
+
                 responseSender.sendResponse(
                         commandProcessor.runCommand(packet),
                         packet.getSocketAddress());
             }
-        //TODO streamCorrupted
         }
     }
 

@@ -52,7 +52,7 @@ public class Person implements Serializable {
 
     @Override
     public String toString() {
-        return "sourse.Person{" +
+        return "Person{" +
                 "name='" + name + '\'' +
                 ", weight=" + weight +
                 ", passportID='" + passportID + '\'' +
