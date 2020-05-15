@@ -1,7 +1,4 @@
-import java.io.ByteArrayInputStream;
 import java.io.IOException;
-import java.io.ObjectInputStream;
-import java.net.DatagramPacket;
 import java.net.InetSocketAddress;
 import java.nio.channels.DatagramChannel;
 import org.slf4j.Logger;
@@ -9,24 +6,33 @@ import org.slf4j.LoggerFactory;
 
 public class AwesomeServer {
     private static final Logger logger = LoggerFactory.getLogger(AwesomeServer.class);
+    private String filename;
+    private CommandProcessor commandProcessor;
+
+    public AwesomeServer(String filename) {
+        this.filename = filename;
+    }
+
+    public CommandProcessor getCommandProcessor() {
+        return commandProcessor;
+    }
+
     public void run() throws IOException {
         try (
              DatagramChannel serverChannel = DatagramChannel.open()) {
             serverChannel.configureBlocking(false);
-            logger.info("Открываем канал передачи {}", serverChannel);
+            logger.info("Открываем канал передачи");
             InetSocketAddress address = new InetSocketAddress("localhost", 8000);
             logger.info("Адрес сокета {}", address);
             serverChannel.bind(address);
-            logger.info("Сервер привязан к сокету с адзресом {}", address);
+            logger.info("Канал привязан к сокету с адресом {}", address);
             RequestReader requestReader = new RequestReader(serverChannel);
-            CommandProcessor commandProcessor = new CommandProcessor();
-            System.out.println("Сервер совсем запустился...");
-            logger.info("Сервер запущен. ", commandProcessor);
+            commandProcessor = FileSaver.load(filename);
+            logger.info("Сервер запущен. ");
             ResponseSender responseSender = new ResponseSender(serverChannel);
-            logger.info("Сервер ждёт команды от клиента.", requestReader);
+            logger.info("Сервер ждёт команды от клиента.");
             while (true) {
                 NiceToAwesomePacket packet = requestReader.getNewPacket();
-                logger.info("Получение нового запроса {}", packet);
                 if (packet.getCommand()[0].equals("exit")) break;
 
                 responseSender.sendResponse(

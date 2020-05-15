@@ -1,3 +1,6 @@
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import java.io.*;
 import java.net.SocketAddress;
 import java.nio.ByteBuffer;
@@ -7,6 +10,7 @@ import java.util.Arrays;
 public class RequestReader {
 
     DatagramChannel channel;
+    private static final Logger logger = LoggerFactory.getLogger(AwesomeServer.class);
 
     public RequestReader(DatagramChannel channel) {
         this.channel = channel;
@@ -20,8 +24,9 @@ public class RequestReader {
             do {
                 address = channel.receive(buffer);
             } while (address == null);
-            System.out.println(Arrays.toString(buffer.array()));
+            logger.info("Запрос принят");
             NiceToAwesomePacket packet = deserialize(buffer.array());
+            logger.info("Объект десериализован");
             packet.setSocketAddress(address);
             return packet;
         } catch (ClassNotFoundException e) {

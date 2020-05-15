@@ -13,19 +13,24 @@ public class ResponseAcceptor {
         this.channel = channel;
     }
 
-    public AwesomeToNicePacket getResponsePacket() {
+    public AwesomeToNicePacket getResponsePacket() throws DisconnectedException {
         ByteBuffer buffer = ByteBuffer.allocate(1024);
         buffer.clear();
         try {
             SocketAddress address;
+            long timeOfTrying;
+            long currentTime = System.currentTimeMillis();
             do {
                 address = channel.receive(buffer);
+                timeOfTrying = System.currentTimeMillis() - currentTime;
+                //System.out.println(timeOfTrying);
+                if (timeOfTrying > 5000L) throw new DisconnectedException();
             } while (address == null);
             return deserialize(buffer.array());
         } catch (ClassNotFoundException e) {
             System.out.println("Класса неееет");
         } catch (IOException e) {
-            e.printStackTrace();
+            System.out.println("Я честно-честно-честно не знаю как вызвать этот эксэпшн");
         }
         return null;
     }
@@ -36,3 +41,5 @@ public class ResponseAcceptor {
         return (AwesomeToNicePacket) inputStream.readObject();
     }
 }
+
+class DisconnectedException extends Exception {};

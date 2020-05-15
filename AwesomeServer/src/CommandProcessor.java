@@ -1,3 +1,5 @@
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import sourse.Person;
 import sourse.StudyGroup;
 import sourse.enums.FormOfEducation;
@@ -17,6 +19,7 @@ public class CommandProcessor {
     private final LinkedList<StudyGroup> list = new LinkedList<>();
     @XmlElement
     private final Date dateOfInitialization = new Date();
+    private static final Logger logger = LoggerFactory.getLogger(AwesomeServer.class);
 
     public CommandProcessor() {
         list.forEach(s -> StudyGroup.addId(s.getId()));
@@ -25,21 +28,24 @@ public class CommandProcessor {
 
     public AwesomeToNicePacket runCommand(NiceToAwesomePacket packet) {
         String command = packet.getCommand()[0];
+        AwesomeToNicePacket nicePacket = null;
         switch (command) {
-            case "info": return info();
-            case "add": return add(packet.getStudyGroup());
-            case "update": return update(packet.getCommand()[1], packet.getStudyGroup());
-            case "show": return show();
-            case "remove_by_id": return removeByID(packet.getCommand()[1]);
-            case "clear": clear(); return new AwesomeToNicePacket("clear Done");
-            case "head": return head();
-            case "add_if_max": return addIfMax(packet.getStudyGroup());
-            case "remove_greater": return removeGreater(packet.getStudyGroup());
-            case "average_of_average_mark": return averageOfAverageMark();
-            case "count_less_than_form_of_education": return countLessAndSoOn(packet.getCommand()[1]);
-            case "print_field_ascending_semester_enum": return printFieldAndSoOn();
+            case "check": nicePacket = new AwesomeToNicePacket("Done"); break;
+            case "info": nicePacket = info(); break;
+            case "add": nicePacket = add(packet.getStudyGroup()); break;
+            case "update": nicePacket = update(packet.getCommand()[1], packet.getStudyGroup()); break;
+            case "show": nicePacket = show(); break;
+            case "remove_by_id": nicePacket = removeByID(packet.getCommand()[1]); break;
+            case "clear": clear(); nicePacket = new AwesomeToNicePacket("clear Done"); break;
+            case "head": nicePacket = head(); break;
+            case "add_if_max": nicePacket = addIfMax(packet.getStudyGroup()); break;
+            case "remove_greater": nicePacket = removeGreater(packet.getStudyGroup()); break;
+            case "average_of_average_mark": nicePacket = averageOfAverageMark(); break;
+            case "count_less_than_form_of_education": nicePacket = countLessAndSoOn(packet.getCommand()[1]); break;
+            case "print_field_ascending_semester_enum": nicePacket = printFieldAndSoOn();
         }
-        return null;
+        logger.info("Команда {} выполнена", command);
+        return nicePacket;
     }
 
     public AwesomeToNicePacket info() {

@@ -23,7 +23,7 @@ public class UserMagicInteract {
 
     public void printResponse(AwesomeToNicePacket packet) {
         String response = packet.getResponse();
-        System.out.println(response);
+        //System.out.println(response);
        /* Map<String, Consumer<String>> consumers = Map.of(
                 "info", this::info,
                 "show", this::show,

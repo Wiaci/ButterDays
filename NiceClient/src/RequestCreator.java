@@ -37,6 +37,7 @@ public class RequestCreator {
     public NiceToAwesomePacket createPacket(String[] command) throws CtrlDException {
         String firstWord = command[0];
         switch (firstWord) {
+            case "check":
             case "info":
             case "show":
             case "clear":

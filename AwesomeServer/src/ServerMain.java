@@ -5,9 +5,24 @@ import java.nio.channels.DatagramChannel;
 import java.util.logging.Logger;
 
 public class ServerMain {
+
+    static AwesomeServer awesomeServer;
+
     public static void main(String[] args) throws IOException {
-        AwesomeServer awesomeServer = new AwesomeServer();
-        awesomeServer.run();
+        Runtime.getRuntime().addShutdownHook(new Thread(() -> {
+            if (awesomeServer != null) {
+                FileSaver.save(awesomeServer.getCommandProcessor(), args[0]);
+            }
+        }));
+        if (args.length > 0) {
+            awesomeServer = new AwesomeServer(args[0]);
+            awesomeServer.run();
+        }
+
+
+
+
+
 
         /*DatagramChannel server = DatagramChannel.open();
         InetSocketAddress iAdd = new InetSocketAddress("localhost", 8989);

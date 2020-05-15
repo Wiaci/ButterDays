@@ -1,3 +1,6 @@
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import java.io.*;
 import java.net.SocketAddress;
 import java.nio.ByteBuffer;
@@ -6,6 +9,7 @@ import java.nio.channels.DatagramChannel;
 public class ResponseSender {
 
     DatagramChannel channel;
+    private static final Logger logger = LoggerFactory.getLogger(AwesomeServer.class);
 
     public ResponseSender(DatagramChannel channel) {
         this.channel = channel;
@@ -14,6 +18,7 @@ public class ResponseSender {
     public void sendResponse(AwesomeToNicePacket packet, SocketAddress address) {
         try {
             byte[] codedPacket = serialize(packet);
+            logger.info("Ответ сериализован");
             ByteBuffer buffer = ByteBuffer.wrap(codedPacket);
             buffer.clear();
             channel.send(buffer, address);
