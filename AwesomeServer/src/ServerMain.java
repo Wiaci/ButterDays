@@ -17,7 +17,8 @@ public class ServerMain {
         if (args.length > 0) {
             awesomeServer = new AwesomeServer(args[0]);
             awesomeServer.run();
-        }
+        } else System.out.println("Нужен файл с коллекцией!");
+
 
 
 
