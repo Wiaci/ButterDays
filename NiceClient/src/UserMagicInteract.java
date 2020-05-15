@@ -4,6 +4,8 @@ import sourse.enums.*;
 
 import java.io.BufferedReader;
 import java.io.IOException;
+import java.util.Map;
+import java.util.function.Consumer;
 
 public class UserMagicInteract {
 
@@ -22,6 +24,19 @@ public class UserMagicInteract {
     public void printResponse(AwesomeToNicePacket packet) {
         String response = packet.getResponse();
         System.out.println(response);
+       /* Map<String, Consumer<String>> consumers = Map.of(
+                "info", this::info,
+                "show", this::show,
+                "add", this::add,
+                "add_if_max", this::add,
+                "update", this::update,
+                "remove_by_id", this::removeByID,
+                "head", this::head,
+                "average_of_average_mark", this::averageOfAverageMark,
+                "average_of_average_mark", this::countLessAndSoOn,
+                "print_field_ascending_semester_enum", this::printFieldAndSoOn
+                );*/
+
         switch (response.split(" ", 3)[0]) {
             case "info": info(response); break;
             case "show": show(response); break;
@@ -34,7 +49,8 @@ public class UserMagicInteract {
             case "clear": clear(); break;
             case "head": head(response); break;
             case "average_of_average_mark": averageOfAverageMark(response); break;
-            case "count_less_than_form_of_education": countLessAndSoOn(response); break;
+            case "count_less_than_form_of_education" +
+                    "": countLessAndSoOn(response); break;
             case "print_field_ascending_semester_enum": printFieldAndSoOn(response); break;
         }
     }
@@ -49,72 +65,82 @@ public class UserMagicInteract {
         System.out.println("Тип коллекции: LinkedList");
         System.out.println("Количество элементов в коллекции: " + strings[1]);
     }
+
     private void show(String response) {
         String[] strings = response.split(" ");
         if (strings.length > 1) {
             System.out.println("Элементы коллекции: ");
-            for(int i = 1; i < strings.length; i++){
+            for (int i = 1; i < strings.length; i++) {
                 System.out.print(strings[i] + " ");
             }
             System.out.println();
         } else System.out.println("Коллекция пуста");
-        }
+    }
+
     private void add(String response) {
         String[] strings = response.split(" ");
-        if (strings.length < 3){
+        if (strings.length < 3) {
             System.out.println("Элемент успешно добавлен");
-        } else if(strings[2].equals("passport")  ){ System.out.println("Элемент успешно не добавлен так как passportId неверный");
+        } else if (strings[2].equals("passport")) {
+            System.out.println("Элемент успешно не добавлен так как passportId неверный");
         } else System.out.println("Элемент успешно не добавлен так как элемент не является максимальным");
     }
+
     private void update(String response) {
         String[] strings = response.split(" ");
-        if (strings.length < 3){
+        if (strings.length < 3) {
             System.out.println("3начение элемента успешно обновлено.");
-        } else if(strings[2].equals("id")  ){
+        } else if (strings[2].equals("id")) {
             System.out.println("3начение элемента успешно не обновлено так как id неверный.");
         } else System.out.println("3начение элемента успешно не обновлено так как passportId неверный.");
     }
+
     private void removeByID(String response) {
         String[] strings = response.split(" ");
-        if (strings[1].equals("Succeed") ){
+        if (strings[1].equals("Succeed")) {
             System.out.println("Элемент удалён.");
         } else System.out.println("У админа папа депутат. Ни в коем случае нельзя удалять!");
     }
+
     private void clear() {
         System.out.println("Природа очистилась на столько, что из StudyGroup все самоизолировались.");
     }
+
     private void head(String response) {
         String[] strings = response.split(" ");
-        if (strings.length > 3){
+        if (strings.length > 3) {
             System.out.println("Первый элемент: ");
-            for(int i = 1; i < strings.length; i++){
-            System.out.println(strings[i] + " ");
+            for (int i = 1; i < strings.length; i++) {
+                System.out.println(strings[i] + " ");
             }
-        } System.out.println("Коллекция пустая, как полки с туалетной бумагой в магазине.");
+        }
+        System.out.println("Коллекция пустая, как полки с туалетной бумагой в магазине.");
     }
 
     private void removeGreater(String response) {
         String[] strings = response.split(" ");
         System.out.println("Удалённые элементы: ");
-        for(int i = 1; i < strings.length; i++){
+        for (int i = 1; i < strings.length; i++) {
             System.out.println(strings[i] + " ");
         }
     }
 
     private void averageOfAverageMark(String response) {
         String[] strings = response.split(" ");
-        System.out.printf("Среднее начение: %.1f",  Float.parseFloat(strings[1]));
+        System.out.printf("Среднее начение: %.1f", Float.parseFloat(strings[1]));
         System.out.println();
     }
+
     private void countLessAndSoOn(String response) {
         String[] strings = response.split(" ");
-        System.out.println( strings[1] + " элементов меньше заданного.");
+        System.out.println(strings[1] + " элементов меньше заданного.");
     }
+
     private void printFieldAndSoOn(String response) {
         String[] strings = response.split(" ");
         if (strings.length > 1) {
             System.out.println("3начения в порядке ворастания:");
-            for(int i = 1; i < strings.length; i++){
+            for (int i = 1; i < strings.length; i++) {
                 System.out.println(strings[i] + ", ");
             }
         } else System.out.println("Семестры нигде не указаны");
@@ -155,15 +181,16 @@ public class UserMagicInteract {
         }
         if (command.length == 1) return false;
         if (firstWord.equals("update") && command[1].matches("\\d{1,4}")) return true;
-        if (firstWord.equals("remove_by_id")  && command[1].matches("\\d{1,4}")) return true;
+        if (firstWord.equals("remove_by_id") && command[1].matches("\\d{1,4}")) return true;
         return firstWord.equals("count_less_than_form_of_education") && (command[1].equals("DISTANCE_EDUCATION")
                 || command[1].equals("FULL_TIME_EDUCATION") || command[1].equals("EVENING_CLASSES"));
     }
+
     public StudyGroup getStudyGroup() throws CtrlDException {
         String name;
         int x;
         int y;
-        long studentsCount ;
+        long studentsCount;
         float averageMark;
         FormOfEducation formOfEducation = null;
         Semester semester = null;
@@ -230,15 +257,24 @@ public class UserMagicInteract {
             if (isScript) System.out.println(line);
             boolean isFit = true;
             switch (line) {
-                case "" : break;
-                case "FULL_TIME_EDUCATION" : formOfEducation = FormOfEducation.FULL_TIME_EDUCATION; break;
-                case "DISTANCE_EDUCATION" : formOfEducation = FormOfEducation.DISTANCE_EDUCATION; break;
-                case "EVENING_CLASSES" : formOfEducation = FormOfEducation.EVENING_CLASSES; break;
-                default :
+                case "":
+                    break;
+                case "FULL_TIME_EDUCATION":
+                    formOfEducation = FormOfEducation.FULL_TIME_EDUCATION;
+                    break;
+                case "DISTANCE_EDUCATION":
+                    formOfEducation = FormOfEducation.DISTANCE_EDUCATION;
+                    break;
+                case "EVENING_CLASSES":
+                    formOfEducation = FormOfEducation.EVENING_CLASSES;
+                    break;
+                default:
                     System.out.println("Такой формы обучения нет");
                     isFit = false;
             }
-            if (isFit) { break; }
+            if (isFit) {
+                break;
+            }
         } while (true);
 
         do {
@@ -247,16 +283,27 @@ public class UserMagicInteract {
             if (isScript) System.out.println(line);
             boolean isFit = true;
             switch (line) {
-                case "" : break;
-                case "EIGHTH" : semester = Semester.EIGHTH; break;
-                case "FIFTH" : semester = Semester.FIFTH; break;
-                case "FOURTH" : semester = Semester.FOURTH; break;
-                case "SIXTH" : semester = Semester.SIXTH; break;
-                default :
+                case "":
+                    break;
+                case "EIGHTH":
+                    semester = Semester.EIGHTH;
+                    break;
+                case "FIFTH":
+                    semester = Semester.FIFTH;
+                    break;
+                case "FOURTH":
+                    semester = Semester.FOURTH;
+                    break;
+                case "SIXTH":
+                    semester = Semester.SIXTH;
+                    break;
+                default:
                     System.out.println("Такого номера семестра нет");
                     isFit = false;
             }
-            if (isFit) { break; }
+            if (isFit) {
+                break;
+            }
         } while (true);
 
         do {
@@ -290,8 +337,7 @@ public class UserMagicInteract {
                 } else if (line.equals("")) {
                     passportId = null;
                     break;
-                }
-                else {
+                } else {
                     System.out.println("Админ с таким passportId уже существует");
                     continue;
                 }
@@ -305,16 +351,27 @@ public class UserMagicInteract {
             if (isScript) System.out.println(line);
             boolean isFit = true;
             switch (line) {
-                case "" : break;
-                case "BROWN" : eyeColor = Color.BROWN; break;
-                case "ORANGE" : eyeColor = Color.ORANGE; break;
-                case "RED" : eyeColor = Color.RED; break;
-                case "YELLOW" : eyeColor = Color.YELLOW; break;
-                default :
+                case "":
+                    break;
+                case "BROWN":
+                    eyeColor = Color.BROWN;
+                    break;
+                case "ORANGE":
+                    eyeColor = Color.ORANGE;
+                    break;
+                case "RED":
+                    eyeColor = Color.RED;
+                    break;
+                case "YELLOW":
+                    eyeColor = Color.YELLOW;
+                    break;
+                default:
                     System.out.println("Формат ввода неверный");
                     isFit = false;
             }
-            if (isFit) { break; }
+            if (isFit) {
+                break;
+            }
         } while (true);
 
         do {
@@ -323,15 +380,25 @@ public class UserMagicInteract {
             if (isScript) System.out.println(line);
             boolean isFit = true;
             switch (line) {
-                case "INDIA" : nationality = Country.INDIA; break;
-                case "FRANCE" : nationality = Country.FRANCE; break;
-                case "JAPAN" : nationality = Country.JAPAN; break;
-                case "SPAIN" : nationality = Country.SPAIN; break;
-                default :
+                case "INDIA":
+                    nationality = Country.INDIA;
+                    break;
+                case "FRANCE":
+                    nationality = Country.FRANCE;
+                    break;
+                case "JAPAN":
+                    nationality = Country.JAPAN;
+                    break;
+                case "SPAIN":
+                    nationality = Country.SPAIN;
+                    break;
+                default:
                     System.out.println("Такой страны нет");
                     isFit = false;
             }
-            if (isFit) { break; }
+            if (isFit) {
+                break;
+            }
         } while (true);
         return new StudyGroup(name, new Coordinates(x, y), studentsCount, averageMark, formOfEducation, semester,
                 new Person(adminName, weight, passportId, eyeColor, nationality));
@@ -352,7 +419,7 @@ public class UserMagicInteract {
     }
 
     public void printHello() {
-        String[] quotes = new String[] {"у втшника нет цели, только путь, наполненный страданиями",
+        String[] quotes = new String[]{"у втшника нет цели, только путь, наполненный страданиями",
                 "раньше было лучше...",
                 "я вот посидел поныл и ничего не изменилось ну клево ну круто ну я рад",
                 "этот мир прогнил, и не осталось ничего, кроме страданий",
@@ -372,7 +439,8 @@ public class UserMagicInteract {
     //TODO: private
 }
 
-class CtrlDException extends Exception {}
+class CtrlDException extends Exception {
+}
 
 //StudyGroup qwe
 //      id =
