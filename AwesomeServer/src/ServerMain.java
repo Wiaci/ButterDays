@@ -1,12 +1,13 @@
 import java.io.*;
-import java.net.*;
-import java.nio.ByteBuffer;
-import java.nio.channels.DatagramChannel;
-import java.util.logging.Logger;
+import java.util.Arrays;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class ServerMain {
 
     static AwesomeServer awesomeServer;
+    private static Logger logger;
 
     public static void main(String[] args) {
         Runtime.getRuntime().addShutdownHook(new Thread(() -> {
@@ -15,12 +16,13 @@ public class ServerMain {
             }
         }));
         try {
+            logger = LoggerFactory.getLogger(AwesomeServer.class);
             if (args.length > 0) {
                 awesomeServer = new AwesomeServer(args[0]);
                 awesomeServer.run();
             } else System.out.println("Нужен файл с коллекцией!");
         } catch (IOException e) {
-            System.out.println("Произошло непредвиденное нечто");
+            logger.info(Arrays.toString(e.getStackTrace()));
         }
     }
 }
