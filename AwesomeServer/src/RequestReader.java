@@ -30,9 +30,9 @@ public class RequestReader {
             packet.setSocketAddress(address);
             return packet;
         } catch (ClassNotFoundException e) {
-            System.out.println("Класса неееет");
+            logger.warn("Класса неееет");
         } catch (IOException e) {
-            e.printStackTrace();
+            logger.warn("Вашему вниманию представляется стектрейс {}", Thread.currentThread().getStackTrace());
         }
         return null;
     }

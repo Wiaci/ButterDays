@@ -92,8 +92,7 @@ public class CommandProcessor {
         if (StudyGroup.getIdSet().contains(Long.parseLong(id))) {
             StudyGroup a = list.stream()
                     .filter(x -> x.getId() == Long.parseLong(id))
-                    .collect(Collectors.toList())
-                    .get(0);
+                    .findFirst().get();
             list.remove(a);
             StudyGroup.getIdSet().remove(a.getId());
             Person.getPassportIDSet().remove(a.getGroupAdmin().getPassportID());
