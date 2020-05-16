@@ -23,10 +23,8 @@ public class ResponseSender {
             buffer.clear();
             channel.send(buffer, address);
         } catch (IOException e) {
-            logger.warn("Вашему вниманию представляется стектрейс {}", Thread.currentThread().getStackTrace());
+            logger.warn("Вашему вниманию представляется стектрейс {}", (Object) e.getStackTrace());
         }
-
-
     }
 
     public byte[] serialize(AwesomeToNicePacket packet) throws IOException {

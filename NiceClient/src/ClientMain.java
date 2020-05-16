@@ -9,12 +9,14 @@ import java.util.Arrays;
 import java.util.Scanner;
 
 public class ClientMain {
-    public static void main(String[] args) throws IOException {
-        NiceClient niceClient = new NiceClient();
+    public static void main(String[] args) {
         try {
+            NiceClient niceClient = new NiceClient();
             niceClient.run();
         } catch (CtrlDException e) {
             System.out.println("Сердечко: моя остановочка");
+        } catch (IOException e) {
+            e.printStackTrace();
         }
     }
 }

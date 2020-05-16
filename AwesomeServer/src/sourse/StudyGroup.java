@@ -53,7 +53,7 @@ public class StudyGroup implements Comparable<StudyGroup>, Serializable {
 
     @Override
     public String toString() {
-        return "StudyGroup name\n" +
+        return "StudyGroup " +  name + "\n" +
                 "\tid=" + id +
                 "\n\t coordinates=" + coordinates +
                 "\n\t creationDate=" + creationDate +

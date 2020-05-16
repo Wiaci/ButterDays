@@ -1,22 +1,35 @@
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.ObjectInputStream;
-import java.net.SocketAddress;
+import java.net.*;
 import java.nio.ByteBuffer;
 import java.nio.channels.DatagramChannel;
 
 public class ResponseAcceptor {
 
-    DatagramChannel channel;
+    DatagramSocket socket;
 
-    public ResponseAcceptor(DatagramChannel channel) {
-        this.channel = channel;
+    public ResponseAcceptor(DatagramSocket socket) {
+        this.socket = socket;
     }
 
-    public AwesomeToNicePacket getResponsePacket() throws DisconnectedException {
-        ByteBuffer buffer = ByteBuffer.allocate(1024);
-        buffer.clear();
+    public AwesomeToNicePacket getResponsePacket() throws SocketTimeoutException {
+        byte[] codedResponse = new byte[1024];
+        DatagramPacket packetToReceive = new DatagramPacket(codedResponse, codedResponse.length);
         try {
+            socket.receive(packetToReceive);
+            return deserialize(codedResponse);
+        } catch (SocketTimeoutException e) {
+            throw new SocketTimeoutException();
+        } catch (IOException e) {
+            e.printStackTrace();
+        } catch (ClassNotFoundException e) {
+            System.out.println("Класса неееет");
+        }
+        /*ByteBuffer buffer = ByteBuffer.allocate(1024);
+        buffer.clear();*/
+
+        /*try {
             SocketAddress address;
             long timeOfTrying;
             long currentTime = System.currentTimeMillis();
@@ -31,7 +44,7 @@ public class ResponseAcceptor {
             System.out.println("Класса неееет");
         } catch (IOException e) {
             System.out.println("Я честно-честно-честно не знаю как вызвать этот эксэпшн");
-        }
+        }*/
         return null;
     }
 

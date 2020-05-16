@@ -1,26 +1,29 @@
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.ObjectOutputStream;
+import java.net.DatagramPacket;
+import java.net.DatagramSocket;
+import java.net.InetAddress;
 import java.net.SocketAddress;
 import java.nio.ByteBuffer;
 import java.nio.channels.DatagramChannel;
 
 public class RequestCreator {
 
-    DatagramChannel channel;
+    InetAddress address;
     UserMagicInteract user;
 
-    public RequestCreator(DatagramChannel channel, UserMagicInteract user) {
-        this.channel = channel;
+    public RequestCreator(InetAddress address, UserMagicInteract user) {
+        this.address = address;
         this.user = user;
     }
 
-    public void sendResponse(NiceToAwesomePacket packet, SocketAddress address) {
+    public void sendResponse(NiceToAwesomePacket packet, DatagramSocket socket, InetAddress address, int port) {
         try {
             byte[] codedPacket = serialize(packet);
-            ByteBuffer buffer = ByteBuffer.wrap(codedPacket);
-            buffer.clear();
-            channel.send(buffer, address);
+            DatagramPacket packetToSend =
+                    new DatagramPacket(codedPacket, codedPacket.length, address, port);
+            socket.send(packetToSend);
         } catch (IOException e) {
             e.printStackTrace();
         }

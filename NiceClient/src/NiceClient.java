@@ -1,5 +1,5 @@
 import java.io.*;
-import java.net.InetSocketAddress;
+import java.net.*;
 import java.nio.channels.DatagramChannel;
 import java.util.HashMap;
 import java.util.LinkedList;
@@ -9,53 +9,59 @@ public class NiceClient {
     UserMagicInteract user;
     ResponseAcceptor responseAcceptor;
     RequestCreator requestCreator;
-    InetSocketAddress serverAddress = new InetSocketAddress("localhost", 8000);
+    private final DatagramSocket socket;
+    final String SERVER_ADDRESS = "localhost";
+    InetAddress serverAddress;
+    final int PORT = 8000;
     int connectionTries = 0;
 
-    public void run() throws IOException, CtrlDException {
-        try (DatagramChannel clientChannel = DatagramChannel.open()) {
-            clientChannel.configureBlocking(false);
-            user = new UserMagicInteract(
-                    new BufferedReader(
-                            new InputStreamReader(System.in)), false);
-            responseAcceptor = new ResponseAcceptor(clientChannel);
-            requestCreator = new RequestCreator(clientChannel, user);
-            try {
-                if (!checkConnection()) {
-                    System.out.println("Сервер недоступен");
-                    if (++connectionTries == 7) {
-                        System.out.println("Время ожидания истекло. Штраф 1000 рублей");
-                        return;
-                    }
-                    throw new DisconnectedException();
-                }
-                connectionTries = 0;
-                user.printHello();
-                boolean isInterrupted = false;
-                while (!isInterrupted) {
-                    String[] newCommand = user.getNewCommand();
-                    isInterrupted = launchCommand(newCommand);
-                }
-            } catch (DisconnectedException e) {
-                System.out.println("Переподключение...");
-                run();
-            }
+    public NiceClient() throws SocketException, UnknownHostException {
+        socket = new DatagramSocket();
+        serverAddress = InetAddress.getByName(SERVER_ADDRESS);
+    }
 
+    public void run() throws IOException, CtrlDException {
+        socket.setSoTimeout(5000);
+        user = new UserMagicInteract(
+                new BufferedReader(
+                        new InputStreamReader(System.in)), false);
+        responseAcceptor = new ResponseAcceptor(socket);
+        requestCreator = new RequestCreator(serverAddress, user);
+        try {
+            if (!checkConnection()) {
+                System.out.println("Сервер недоступен");
+                if (++connectionTries == 7) {
+                    System.out.println("Время ожидания истекло. Штраф 1000 рублей");
+                    return;
+                }
+                throw new SocketTimeoutException();
+            }
+            connectionTries = 0;
+            user.printHello();
+            boolean isInterrupted = false;
+            while (!isInterrupted) {
+                String[] newCommand = user.getNewCommand();
+                isInterrupted = launchCommand(newCommand);
+            }
+        } catch (SocketTimeoutException e) {
+            System.out.println("Переподключение...");
+            run();
         }
+
     }
 
     public boolean checkConnection() throws CtrlDException {
         NiceToAwesomePacket checkPacket = requestCreator.createPacket(new String[] {"check"});
-        requestCreator.sendResponse(checkPacket, serverAddress);
+        requestCreator.sendResponse(checkPacket, socket, serverAddress, PORT);
         try {
             AwesomeToNicePacket responsePacket = responseAcceptor.getResponsePacket();
-        } catch (DisconnectedException e) {
+        } catch (SocketTimeoutException e) {
             return false;
         }
         return true;
     }
 
-    public boolean launchCommand(String[] newCommand) throws CtrlDException, DisconnectedException {
+    public boolean launchCommand(String[] newCommand) throws CtrlDException, SocketTimeoutException {
         if (newCommand[0].equals("")) return false;
         if (newCommand[0].equals("exit")) return true;
         if (newCommand[0].equals("help")) {
@@ -70,11 +76,11 @@ public class NiceClient {
             System.out.println("Введи help и прозрей!");
             return false;
         }
-        NiceToAwesomePacket packet = requestCreator.createPacket(newCommand);
-        requestCreator.sendResponse(packet, serverAddress);
+        NiceToAwesomePacket packetRequest = requestCreator.createPacket(newCommand);
+        requestCreator.sendResponse(packetRequest, socket, serverAddress, PORT);
 
-        AwesomeToNicePacket packet1 = responseAcceptor.getResponsePacket();
-        user.printResponse(packet1);
+        AwesomeToNicePacket packetResponse = responseAcceptor.getResponsePacket();
+        user.printResponse(packetResponse);
 
         return false;
     }
@@ -85,7 +91,7 @@ public class NiceClient {
      * Метод для выполнения скрипта
      * @param filename имя файла содержащего скрипт
      */
-    private void executeScript(String filename) throws CtrlDException, DisconnectedException {
+    private void executeScript(String filename) throws CtrlDException{
         try {
             System.out.println("'"+filename+"'");
             BufferedReader reader = new BufferedReader(new FileReader(filename));
