@@ -5,10 +5,8 @@ import sourse.StudyGroup;
 import sourse.enums.FormOfEducation;
 
 import javax.xml.bind.annotation.*;
-import java.util.Comparator;
-import java.util.Date;
-import java.util.LinkedList;
-import java.util.List;
+import java.lang.reflect.Array;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @XmlRootElement
@@ -145,8 +143,11 @@ public class CommandProcessor {
                 .count()));
     }
     public AwesomeToNicePacket printFieldAndSoOn() {
+        ArrayList<String> semesterEnums = new ArrayList<>();
         StringBuilder str = new StringBuilder();
-        list.forEach(s -> str.append(s.getSemesterEnum()).append("\n"));
+        list.forEach(s -> semesterEnums.add(String.valueOf(s.getSemesterEnum())));
+        Collections.sort(semesterEnums);
+        semesterEnums.forEach(s -> str.append(s).append("\n"));
         return new AwesomeToNicePacket("print_field_ascending_semester_enum " + str.toString());
     }
 

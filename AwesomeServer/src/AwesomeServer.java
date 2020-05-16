@@ -38,7 +38,7 @@ public class AwesomeServer {
                 responseSender.sendResponse(
                         commandProcessor.runCommand(packet),
                         packet.getSocketAddress());
-                logger.info("Отправка ответа {}", packet);
+                logger.info("Отправка ответа");
             }
         }
     }
