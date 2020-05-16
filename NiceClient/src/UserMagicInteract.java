@@ -1,11 +1,14 @@
 
-import sourse.*;
-import sourse.enums.*;
+import sourse.Coordinates;
+import sourse.Person;
+import sourse.StudyGroup;
+import sourse.enums.Color;
+import sourse.enums.Country;
+import sourse.enums.FormOfEducation;
+import sourse.enums.Semester;
 
 import java.io.BufferedReader;
 import java.io.IOException;
-import java.util.Map;
-import java.util.function.Consumer;
 
 public class UserMagicInteract {
 
@@ -254,57 +257,33 @@ public class UserMagicInteract {
         do {
             System.out.print("Введите форму обучения: ");
             String line = getNewLine();
-            if (isScript) System.out.println(line);
-            boolean isFit = true;
-            switch (line) {
-                case "":
-                    break;
-                case "FULL_TIME_EDUCATION":
-                    formOfEducation = FormOfEducation.FULL_TIME_EDUCATION;
-                    break;
-                case "DISTANCE_EDUCATION":
-                    formOfEducation = FormOfEducation.DISTANCE_EDUCATION;
-                    break;
-                case "EVENING_CLASSES":
-                    formOfEducation = FormOfEducation.EVENING_CLASSES;
-                    break;
-                default:
-                    System.out.println("Такой формы обучения нет");
-                    isFit = false;
-            }
-            if (isFit) {
+            if (line.equals("")) {
                 break;
+            } else {
+                try {
+                    formOfEducation = Enum.valueOf(FormOfEducation.class, line);
+                    break;
+                } catch (IllegalArgumentException e) {
+                    System.out.println("Такой формы обучения нет");
+                }
             }
         } while (true);
 
         do {
             System.out.print("Введите номер семестра: ");
             String line = getNewLine();
-            if (isScript) System.out.println(line);
-            boolean isFit = true;
-            switch (line) {
-                case "":
-                    break;
-                case "EIGHTH":
-                    semester = Semester.EIGHTH;
-                    break;
-                case "FIFTH":
-                    semester = Semester.FIFTH;
-                    break;
-                case "FOURTH":
-                    semester = Semester.FOURTH;
-                    break;
-                case "SIXTH":
-                    semester = Semester.SIXTH;
-                    break;
-                default:
-                    System.out.println("Такого номера семестра нет");
-                    isFit = false;
-            }
-            if (isFit) {
+            if (line.equals("")) {
                 break;
+            } else {
+                try {
+                    semester = Enum.valueOf(Semester.class, line);
+                    break;
+                } catch (IllegalArgumentException e) {
+                    System.out.println("Такого номера семестра нет");
+                }
             }
         } while (true);
+
 
         do {
             System.out.print("Введите имя админа группы: ");
@@ -348,58 +327,33 @@ public class UserMagicInteract {
         do {
             System.out.print("Введите цвет глаз админа: ");
             String line = getNewLine();
-            if (isScript) System.out.println(line);
-            boolean isFit = true;
-            switch (line) {
-                case "":
-                    break;
-                case "BROWN":
-                    eyeColor = Color.BROWN;
-                    break;
-                case "ORANGE":
-                    eyeColor = Color.ORANGE;
-                    break;
-                case "RED":
-                    eyeColor = Color.RED;
-                    break;
-                case "YELLOW":
-                    eyeColor = Color.YELLOW;
-                    break;
-                default:
-                    System.out.println("Формат ввода неверный");
-                    isFit = false;
-            }
-            if (isFit) {
+            if (line.equals("")) {
                 break;
+            } else {
+                try {
+                    eyeColor = Enum.valueOf(Color.class, line);
+                    break;
+                } catch (IllegalArgumentException e) {
+                    System.out.println("Формат ввода неверный");
+                }
             }
         } while (true);
 
         do {
             System.out.print("Введите национальность админа: ");
             String line = getNewLine();
-            if (isScript) System.out.println(line);
-            boolean isFit = true;
-            switch (line) {
-                case "INDIA":
-                    nationality = Country.INDIA;
-                    break;
-                case "FRANCE":
-                    nationality = Country.FRANCE;
-                    break;
-                case "JAPAN":
-                    nationality = Country.JAPAN;
-                    break;
-                case "SPAIN":
-                    nationality = Country.SPAIN;
-                    break;
-                default:
-                    System.out.println("Такой страны нет");
-                    isFit = false;
-            }
-            if (isFit) {
+            if (line.equals("")) {
                 break;
+            } else {
+                try {
+                    nationality = Enum.valueOf(Country.class, line);
+                    break;
+                } catch (IllegalArgumentException e) {
+                    System.out.println("Такой страны нет");
+                }
             }
         } while (true);
+
         return new StudyGroup(name, new Coordinates(x, y), studentsCount, averageMark, formOfEducation, semester,
                 new Person(adminName, weight, passportId, eyeColor, nationality));
     }
@@ -436,11 +390,9 @@ public class UserMagicInteract {
         System.out.println("Здравствуйте! Знаете ли вы, что " + quotes[i] + "?");
     }
 
-    //TODO: private
+
 }
 
 class CtrlDException extends Exception {
 }
 
-//StudyGroup qwe
-//      id =
