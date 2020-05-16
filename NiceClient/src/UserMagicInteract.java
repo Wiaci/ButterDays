@@ -217,8 +217,6 @@ public class UserMagicInteract {
         float weight = read("Введите вес админа: ", s -> s.matches("\\d{0,10}\\.?\\d{1,10}"),
                 Float::parseFloat, "Формат ввода неверный");
         String passportId;
-        Color eyeColor = readEnum("Введите цвет глаз админа: ", Color.values(), "Формат ввода неверный");
-        Country nationality = readEnum("Введите национальность админа: ", Country.values(), "Такой страны нет");
 
         do {
             System.out.print("Введите passportID админа: ");
@@ -238,6 +236,9 @@ public class UserMagicInteract {
             }
             System.out.println("Слишком длинный/короткий passportId");
         } while (true);
+
+        Color eyeColor = readEnum("Введите цвет глаз админа: ", Color.values(), "Формат ввода неверный");
+        Country nationality = readEnum("Введите национальность админа: ", Country.values(), "Такой страны нет");
 
         return new StudyGroup(name, new Coordinates(x, y), studentsCount, averageMark, formOfEducation, semester,
                 new Person(adminName, weight, passportId, eyeColor, nationality));
