@@ -23,7 +23,7 @@ public class ResponseSender {
             buffer.clear();
             channel.send(buffer, address);
         } catch (IOException e) {
-            logger.warn("Вашему вниманию представляется стектрейс {}", (Object) e.getStackTrace());
+            logger.warn("Вашему вниманию представляется стектрейс {}", e.getMessage());
         }
     }
 

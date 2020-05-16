@@ -1,14 +1,10 @@
-
-import sourse.Coordinates;
-import sourse.Person;
-import sourse.StudyGroup;
-import sourse.enums.Color;
-import sourse.enums.Country;
-import sourse.enums.FormOfEducation;
-import sourse.enums.Semester;
-
+import sourse.*;
+import sourse.enums.*;
 import java.io.BufferedReader;
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.function.Function;
+import java.util.function.Predicate;
 
 public class UserMagicInteract {
 
@@ -26,20 +22,6 @@ public class UserMagicInteract {
 
     public void printResponse(AwesomeToNicePacket packet) {
         String response = packet.getResponse();
-        //System.out.println(response);
-       /* Map<String, Consumer<String>> consumers = Map.of(
-                "info", this::info,
-                "show", this::show,
-                "add", this::add,
-                "add_if_max", this::add,
-                "update", this::update,
-                "remove_by_id", this::removeByID,
-                "head", this::head,
-                "average_of_average_mark", this::averageOfAverageMark,
-                "average_of_average_mark", this::countLessAndSoOn,
-                "print_field_ascending_semester_enum", this::printFieldAndSoOn
-                );*/
-
         switch (response.split(" ", 3)[0]) {
             case "info": info(response); break;
             case "show": show(response); break;
@@ -189,121 +171,53 @@ public class UserMagicInteract {
                 || command[1].equals("FULL_TIME_EDUCATION") || command[1].equals("EVENING_CLASSES"));
     }
 
+    public <T> T read(String helloMessage, Predicate<String> predicate, Function<String, T> function, String errorMessage ) throws CtrlDException  {
+        do {
+            System.out.print(helloMessage);
+            String line = getNewLine();
+            if(predicate.test(line)){
+                return function.apply(line);
+            } else {
+                System.out.print(errorMessage);
+            }
+        } while(true);
+    }
+
+    public <T> T readEnum(String helloMessage, T[] enums, String errorMessage) throws CtrlDException {
+        do {
+            System.out.print(helloMessage);
+            String line = getNewLine();
+            if (line.equals("")) return null;
+            else
+                for (T t: enums) {
+                    if (line.equals(t)) {
+                        return t;
+                    }
+                }
+        } while (true);
+    }
+
     public StudyGroup getStudyGroup() throws CtrlDException {
-        String name;
-        int x;
-        int y;
-        long studentsCount;
-        float averageMark;
-        FormOfEducation formOfEducation = null;
-        Semester semester = null;
-        String adminName;
-        float weight;
+        String name = read("Введите имя группы: ", x -> !x.equals(""), s -> s,
+                "Строка не может быть пустой");
+        int x = read("Введите координату x: ", s -> s.matches("-?\\d{1,10}"), Integer::parseInt,
+                "Формат ввода неверный");
+        int y = read("Введите координату y: ", s -> s.matches("-?\\d{1,10}") && Integer.parseInt(s) > -791,
+                Integer::parseInt, "Формат ввода неверный");
+        long studentsCount = read("Введите количество студентов в группе: ", s -> s.matches("\\d{1,10}"),
+                Long::parseLong, "Формат ввода неверный");
+        float averageMark = read("Введите средний балл студентов: ", s -> s.matches("\\d{0,10}\\.?\\d{1,10}"),
+                Float::parseFloat, "Формат ввода неверный");
+        FormOfEducation formOfEducation = readEnum("Введите форму обучения: ", FormOfEducation.values(),
+                "Такой формы обучения нет");
+        Semester semester = readEnum("Введите номер семестра: ", Semester.values(), "Такого номера семестра нет");
+        String adminName = read("Введите имя админа группы: ", s -> !s.equals(""), s -> s,
+                "Строка не может быть пустой");
+        float weight = read("Введите вес админа: ", s -> s.matches("\\d{0,10}\\.?\\d{1,10}"),
+                Float::parseFloat, "Формат ввода неверный");
         String passportId;
-        Color eyeColor = null;
-        Country nationality = null;
-
-        do {
-            System.out.print("Введите имя группы: ");
-            name = getNewLine();
-            if (isScript) System.out.println(name);
-            if (name.equals("")) {
-                System.out.println("Строка не может быть пустой");
-            }
-        } while (name.equals(""));
-
-        do {
-            System.out.print("Введите координату x: ");
-            String line = getNewLine();
-            if (isScript) System.out.println(line);
-            if (line.matches("-?\\d{1,10}")) {
-                x = Integer.parseInt(line);
-                break;
-            }
-            System.out.println("Формат ввода неверный");
-        } while (true);
-
-        do {
-            System.out.print("Введите координату y: ");
-            String line = getNewLine();
-            if (isScript) System.out.println(line);
-            if (line.matches("-?\\d{1,10}") && Integer.parseInt(line) > -791) {
-                y = Integer.parseInt(line);
-                break;
-            }
-            System.out.println("Формат ввода неверный");
-        } while (true);
-
-        do {
-            System.out.print("Введите количество студентов в группе: ");
-            String line = getNewLine();
-            if (isScript) System.out.println(line);
-            if (line.matches("\\d{1,10}")) {
-                studentsCount = Long.parseLong(line);
-                break;
-            }
-            System.out.println("Формат ввода неверный");
-        } while (true);
-        do {
-            System.out.print("Введите средний балл студентов: ");
-            String line = getNewLine();
-            if (line.matches("\\d{0,10}\\.?\\d{1,10}")) {
-                averageMark = Float.parseFloat(line);
-                break;
-            }
-            System.out.println("Формат ввода неверный");
-        } while (true);
-
-        do {
-            System.out.print("Введите форму обучения: ");
-            String line = getNewLine();
-            if (line.equals("")) {
-                break;
-            } else {
-                try {
-                    formOfEducation = Enum.valueOf(FormOfEducation.class, line);
-                    break;
-                } catch (IllegalArgumentException e) {
-                    System.out.println("Такой формы обучения нет");
-                }
-            }
-        } while (true);
-
-        do {
-            System.out.print("Введите номер семестра: ");
-            String line = getNewLine();
-            if (line.equals("")) {
-                break;
-            } else {
-                try {
-                    semester = Enum.valueOf(Semester.class, line);
-                    break;
-                } catch (IllegalArgumentException e) {
-                    System.out.println("Такого номера семестра нет");
-                }
-            }
-        } while (true);
-
-
-        do {
-            System.out.print("Введите имя админа группы: ");
-            adminName = getNewLine();
-            if (isScript) System.out.println(adminName);
-            if (adminName.equals("")) {
-                System.out.println("Строка не может быть пустой");
-            }
-        } while (adminName.equals(""));
-
-        do {
-            System.out.print("Введите вес админа: ");
-            String line = getNewLine();
-            if (isScript) System.out.println(line);
-            if (line.matches("\\d{0,10}\\.?\\d{1,10}")) {
-                weight = Float.parseFloat(line);
-                break;
-            }
-            System.out.println("Формат ввода неверный");
-        } while (true);
+        Color eyeColor = readEnum("Введите цвет глаз админа: ", Color.values(), "Формат ввода неверный");
+        Country nationality = readEnum("Введите национальность админа: ", Country.values(), "Такой страны нет");
 
         do {
             System.out.print("Введите passportID админа: ");
@@ -322,36 +236,6 @@ public class UserMagicInteract {
                 }
             }
             System.out.println("Слишком длинный/короткий passportId");
-        } while (true);
-
-        do {
-            System.out.print("Введите цвет глаз админа: ");
-            String line = getNewLine();
-            if (line.equals("")) {
-                break;
-            } else {
-                try {
-                    eyeColor = Enum.valueOf(Color.class, line);
-                    break;
-                } catch (IllegalArgumentException e) {
-                    System.out.println("Формат ввода неверный");
-                }
-            }
-        } while (true);
-
-        do {
-            System.out.print("Введите национальность админа: ");
-            String line = getNewLine();
-            if (line.equals("")) {
-                break;
-            } else {
-                try {
-                    nationality = Enum.valueOf(Country.class, line);
-                    break;
-                } catch (IllegalArgumentException e) {
-                    System.out.println("Такой страны нет");
-                }
-            }
         } while (true);
 
         return new StudyGroup(name, new Coordinates(x, y), studentsCount, averageMark, formOfEducation, semester,
@@ -389,10 +273,6 @@ public class UserMagicInteract {
         int i = (int) (Math.random() * quotes.length);
         System.out.println("Здравствуйте! Знаете ли вы, что " + quotes[i] + "?");
     }
-
-
 }
 
-class CtrlDException extends Exception {
-}
-
+class CtrlDException extends Exception { }

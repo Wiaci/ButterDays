@@ -32,7 +32,7 @@ public class RequestReader {
         } catch (ClassNotFoundException e) {
             logger.warn("Класса неееет");
         } catch (IOException e) {
-            logger.warn("Вашему вниманию представляется стектрейс {}", Thread.currentThread().getStackTrace());
+            logger.warn("Вашему вниманию представляется стектрейс {}", e.getMessage());
         }
         return null;
     }
