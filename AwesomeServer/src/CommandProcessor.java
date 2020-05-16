@@ -54,13 +54,14 @@ public class CommandProcessor {
 
     public AwesomeToNicePacket show() {
         StringBuilder str = new StringBuilder();
-        list.stream()
+        String s = list.stream()
                 .sorted((o1, o2) -> {
                     if (o1.getName().compareTo(o2.getName()) > 0) return 1;
                     else if (o1.getName().compareTo(o2.getName()) < 0) return -1;
                     else return 0;
                 })
-                .forEach(x -> str.append(x.toString()).append("\n"));
+                .map(StudyGroup::toString)
+                .collect(Collectors.joining("\n"))
             ;
         return new AwesomeToNicePacket("show " + str.toString());
     }
@@ -92,7 +93,8 @@ public class CommandProcessor {
         if (StudyGroup.getIdSet().contains(Long.parseLong(id))) {
             StudyGroup a = list.stream()
                     .filter(x -> x.getId() == Long.parseLong(id))
-                    .findFirst().get();
+                    .findFirst()
+                    .orElse(new StudyGroup());
             list.remove(a);
             StudyGroup.getIdSet().remove(a.getId());
             Person.getPassportIDSet().remove(a.getGroupAdmin().getPassportID());
@@ -127,11 +129,11 @@ public class CommandProcessor {
         return new AwesomeToNicePacket("remove_greater " + Integer.toString(startSize - list.size()));
     }
     public AwesomeToNicePacket averageOfAverageMark() {
-        float sum = 0;
-        for (StudyGroup group : list) {
-            sum += group.getAverageMark();
-        }
-        return new AwesomeToNicePacket("average_of_average_mark " + sum / list.size());
+        float average = (float) list.stream()
+                .mapToDouble(StudyGroup::getAverageMark)
+                .average()
+                .orElse(0);
+        return new AwesomeToNicePacket("average_of_average_mark " + average);
     }
     public AwesomeToNicePacket countLessAndSoOn(String formOfEducation) {
         return new AwesomeToNicePacket("count_less_than_form_of_education " + Long.toString(list.stream()
@@ -142,12 +144,12 @@ public class CommandProcessor {
                 .count()));
     }
     public AwesomeToNicePacket printFieldAndSoOn() {
-        ArrayList<String> semesterEnums = new ArrayList<>();
-        StringBuilder str = new StringBuilder();
-        list.forEach(s -> semesterEnums.add(String.valueOf(s.getSemesterEnum())));
-        Collections.sort(semesterEnums);
-        semesterEnums.forEach(s -> str.append(s).append("\n"));
-        return new AwesomeToNicePacket("print_field_ascending_semester_enum " + str.toString());
+        String s = list.stream()
+                .map(StudyGroup::getSemesterEnum)
+                .sorted()
+                .map(Enum::toString)
+                .collect(Collectors.joining("\n"));
+        return new AwesomeToNicePacket("print_field_ascending_semester_enum " + s);
     }
 
 }
