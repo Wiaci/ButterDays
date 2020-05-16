@@ -178,7 +178,7 @@ public class UserMagicInteract {
             if(predicate.test(line)){
                 return function.apply(line);
             } else {
-                System.out.print(errorMessage);
+                System.out.println(errorMessage);
             }
         } while(true);
     }
@@ -190,10 +190,11 @@ public class UserMagicInteract {
             if (line.equals("")) return null;
             else
                 for (T t: enums) {
-                    if (line.equals(t)) {
+                    if (line.equals(t.toString())) {
                         return t;
                     }
                 }
+            System.out.println(errorMessage);
         } while (true);
     }
 
