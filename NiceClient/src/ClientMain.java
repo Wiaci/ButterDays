@@ -14,7 +14,7 @@ public class ClientMain {
             NiceClient niceClient = new NiceClient();
             niceClient.run();
         } catch (CtrlDException e) {
-            System.out.println("Сердечко: моя остановочка");
+            System.out.println("\nСердечко: моя остановочка");
         } catch (IOException e) {
             e.printStackTrace();
         }

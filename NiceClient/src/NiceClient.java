@@ -21,7 +21,7 @@ public class NiceClient {
     }
 
     public void run() throws IOException, CtrlDException {
-        socket.setSoTimeout(5000);
+        socket.setSoTimeout(1000);
         user = new UserMagicInteract(
                 new BufferedReader(
                         new InputStreamReader(System.in)), false);
@@ -29,7 +29,7 @@ public class NiceClient {
         requestCreator = new RequestCreator(serverAddress, user);
         try {
             if (!checkConnection()) {
-                System.out.println("Сервер недоступен");
+                System.out.println("\r\b\rСервер недоступен");
                 if (++connectionTries == 7) {
                     System.out.println("Время ожидания истекло. Штраф 1000 рублей");
                     return;

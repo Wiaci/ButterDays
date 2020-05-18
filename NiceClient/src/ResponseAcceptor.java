@@ -7,7 +7,9 @@ import java.nio.channels.DatagramChannel;
 
 public class ResponseAcceptor {
 
-    DatagramSocket socket;
+    private DatagramSocket socket;
+    private int secondsOfTrying;
+    private String symbol;
 
     public ResponseAcceptor(DatagramSocket socket) {
         this.socket = socket;
@@ -20,7 +22,15 @@ public class ResponseAcceptor {
             socket.receive(packetToReceive);
             return deserialize(codedResponse);
         } catch (SocketTimeoutException e) {
-            throw new SocketTimeoutException();
+            if (secondsOfTrying < 5) {
+                System.out.print("");
+                secondsOfTrying++;
+                getResponsePacket();
+            } else {
+                System.out.print("\r");
+                secondsOfTrying = 0;
+                throw new SocketTimeoutException();
+            }
         } catch (IOException e) {
             e.printStackTrace();
         } catch (ClassNotFoundException e) {
@@ -35,5 +45,3 @@ public class ResponseAcceptor {
         return (AwesomeToNicePacket) inputStream.readObject();
     }
 }
-
-class DisconnectedException extends Exception {};
