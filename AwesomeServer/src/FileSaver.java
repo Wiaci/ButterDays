@@ -1,3 +1,6 @@
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import javax.xml.bind.JAXBContext;
 import javax.xml.bind.JAXBException;
 import javax.xml.bind.Marshaller;
@@ -6,6 +9,13 @@ import java.io.*;
 import java.util.Scanner;
 
 public class FileSaver {
+
+    private static Logger logger;
+
+    public FileSaver() {
+        logger = LoggerFactory.getLogger(AwesomeServer.class);
+    }
+
     /**
      * Метод загружает коллекцию из файла
      * @param filename имя файла
@@ -20,14 +30,14 @@ public class FileSaver {
             collection = (CommandProcessor) unmarshaller.unmarshal(bf);
 
         } catch (FileNotFoundException e) {
-            System.out.println("Файл, содержащий коллекцию, отсутствует (возможно, у вас недостаточно прав).\n" +
+            logger.info("Файл, содержащий коллекцию, отсутствует (возможно, у вас недостаточно прав).\n" +
                     "Будет создана новая коллекция");
             collection = new CommandProcessor();
         } catch (JAXBException e) {
-            System.out.println("Файл, содержащий коллекцию, пуст. Будет создана новая коллекция");
+            logger.info("Файл, содержащий коллекцию, пуст. Будет создана новая коллекция");
             collection = new CommandProcessor();
         } catch (IOException e) {
-            System.out.println("Юзер, вы чудовище!");
+            logger.info("Юзер, вы чудовище!");
             Scanner iKnow = new Scanner(System.in);
             String answer;
             do {

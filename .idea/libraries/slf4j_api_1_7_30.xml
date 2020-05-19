@@ -1,14 +1,10 @@
 <component name="libraryTable">
   <library name="slf4j-api-1.7.30">
     <CLASSES>
-      <root url="jar://$USER_HOME$/Загрузки/slf4j-api-1.7.30.jar!/" />
-      <root url="jar://$USER_HOME$/Загрузки/slf4j-simple-1.7.30.jar!/" />
-      <root url="file://$PROJECT_DIR$" />
+      <root url="jar://$PROJECT_DIR$/../slf4j-api-1.7.30.jar!/" />
+      <root url="jar://$PROJECT_DIR$/../slf4j-simple-1.7.30.jar!/" />
     </CLASSES>
     <JAVADOC />
-    <SOURCES>
-      <root url="file://$PROJECT_DIR$/AwesomeServer/src" />
-      <root url="file://$PROJECT_DIR$/NiceClient/src" />
-    </SOURCES>
+    <SOURCES />
   </library>
 </component>

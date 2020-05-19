@@ -2,9 +2,12 @@
   <artifact type="jar" name="AwesomeServer:jar">
     <output-path>$PROJECT_DIR$/out/artifacts/AwesomeServer_jar</output-path>
     <root id="archive" name="AwesomeServer.jar">
+      <element id="directory" name="META-INF">
+        <element id="file-copy" path="$PROJECT_DIR$/AwesomeServer/META-INF/MANIFEST.MF" />
+      </element>
       <element id="module-output" name="AwesomeServer" />
-      <element id="extracted-dir" path="$USER_HOME$/Загрузки/slf4j-api-1.7.30.jar" path-in-jar="/" />
-      <element id="extracted-dir" path="$USER_HOME$/Загрузки/slf4j-simple-1.7.30.jar" path-in-jar="/" />
+      <element id="extracted-dir" path="$PROJECT_DIR$/../slf4j-simple-1.7.30.jar" path-in-jar="/" />
+      <element id="extracted-dir" path="$PROJECT_DIR$/../slf4j-api-1.7.30.jar" path-in-jar="/" />
     </root>
   </artifact>
 </component>

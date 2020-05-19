@@ -63,7 +63,7 @@ public class CommandProcessor {
                 .map(StudyGroup::toString)
                 .collect(Collectors.joining("\n"))
             ;
-        return new AwesomeToNicePacket("show " + str.toString());
+        return new AwesomeToNicePacket("show " + s);
     }
 
     public AwesomeToNicePacket add(StudyGroup group) {
@@ -126,7 +126,7 @@ public class CommandProcessor {
                 .filter(x -> x.compareTo(group) > 0)
                 .collect(Collectors.toList());
         greater.forEach(list::remove);
-        return new AwesomeToNicePacket("remove_greater " + Integer.toString(startSize - list.size()));
+        return new AwesomeToNicePacket("remove_greater " + (startSize - list.size()));
     }
     public AwesomeToNicePacket averageOfAverageMark() {
         float average = (float) list.stream()
@@ -136,7 +136,7 @@ public class CommandProcessor {
         return new AwesomeToNicePacket("average_of_average_mark " + average);
     }
     public AwesomeToNicePacket countLessAndSoOn(String formOfEducation) {
-        return new AwesomeToNicePacket("count_less_than_form_of_education " + Long.toString(list.stream()
+        return new AwesomeToNicePacket("count_less_than_form_of_education " + (list.stream()
                 .filter(x -> x.getFormOfEducation() != null)
                 .filter(x -> x
                         .getFormOfEducation()

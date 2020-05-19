@@ -23,7 +23,7 @@ public class ResponseAcceptor {
             return deserialize(codedResponse);
         } catch (SocketTimeoutException e) {
             if (secondsOfTrying < 5) {
-                System.out.print("");
+                printThreeDots();
                 secondsOfTrying++;
                 getResponsePacket();
             } else {
@@ -39,9 +39,31 @@ public class ResponseAcceptor {
         return null;
     }
 
-    public AwesomeToNicePacket deserialize(byte[] codedPacket) throws IOException, ClassNotFoundException {
+    private AwesomeToNicePacket deserialize(byte[] codedPacket) throws IOException, ClassNotFoundException {
         ByteArrayInputStream byteArrayStream = new ByteArrayInputStream(codedPacket);
         ObjectInputStream inputStream = new ObjectInputStream(byteArrayStream);
         return (AwesomeToNicePacket) inputStream.readObject();
     }
+
+    private void printThreeDots() {
+        long time = 0;
+        long currentTime = System.currentTimeMillis();
+        do {
+            time = System.currentTimeMillis() - currentTime;
+        } while (time != 250);
+        System.out.print(".");
+        do {
+            time = System.currentTimeMillis() - currentTime;
+        } while (time != 500);
+        System.out.print(".");
+        do {
+            time = System.currentTimeMillis() - currentTime;
+        } while (time != 750);
+        System.out.print(".");
+        do {
+            time = System.currentTimeMillis() - currentTime;
+        } while (time != 1000);
+        System.out.print("\b\b\b");
+    }
+
 }

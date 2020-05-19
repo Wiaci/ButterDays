@@ -44,7 +44,7 @@ public class NiceClient {
                 isInterrupted = launchCommand(newCommand);
             }
         } catch (SocketTimeoutException e) {
-            System.out.println("Переподключение...");
+            System.out.print("Переподключение");
             run();
         }
 
