@@ -23,7 +23,7 @@ public class AwesomeServer {
              DatagramChannel serverChannel = DatagramChannel.open()) {
             serverChannel.configureBlocking(false);
             logger.info("Открываем канал передачи");
-            InetSocketAddress address = new InetSocketAddress("localhost", 8000);
+            InetSocketAddress address = new InetSocketAddress("127.0.0.1", 8000);
             logger.info("Адрес сокета {}", address);
             serverChannel.bind(address);
             logger.info("Канал привязан к сокету с адресом {}", address);

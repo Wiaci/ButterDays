@@ -22,8 +22,9 @@ public class ResponseAcceptor {
             socket.receive(packetToReceive);
             return deserialize(codedResponse);
         } catch (SocketTimeoutException e) {
+            if (secondsOfTrying == 0) System.out.print("_______________\r");
             if (secondsOfTrying < 5) {
-                printThreeDots();
+                System.out.print("***");
                 secondsOfTrying++;
                 getResponsePacket();
             } else {
@@ -44,26 +45,4 @@ public class ResponseAcceptor {
         ObjectInputStream inputStream = new ObjectInputStream(byteArrayStream);
         return (AwesomeToNicePacket) inputStream.readObject();
     }
-
-    private void printThreeDots() {
-        long time = 0;
-        long currentTime = System.currentTimeMillis();
-        do {
-            time = System.currentTimeMillis() - currentTime;
-        } while (time != 250);
-        System.out.print(".");
-        do {
-            time = System.currentTimeMillis() - currentTime;
-        } while (time != 500);
-        System.out.print(".");
-        do {
-            time = System.currentTimeMillis() - currentTime;
-        } while (time != 750);
-        System.out.print(".");
-        do {
-            time = System.currentTimeMillis() - currentTime;
-        } while (time != 1000);
-        System.out.print("\b\b\b");
-    }
-
 }

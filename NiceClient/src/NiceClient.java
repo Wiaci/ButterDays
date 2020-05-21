@@ -6,14 +6,15 @@ import java.util.LinkedList;
 
 public class NiceClient {
 
-    UserMagicInteract user;
-    ResponseAcceptor responseAcceptor;
-    RequestCreator requestCreator;
+    private UserMagicInteract user;
+    private ResponseAcceptor responseAcceptor;
+    private RequestCreator requestCreator;
     private final DatagramSocket socket;
-    final String SERVER_ADDRESS = "localhost";
-    InetAddress serverAddress;
-    final int PORT = 8000;
-    int connectionTries = 0;
+    private final String SERVER_ADDRESS = "127.0.0.1";
+    private InetAddress serverAddress;
+    private final int PORT = 8000;
+    private int connectionTries;
+    private String[] runningCommand;
 
     public NiceClient() throws SocketException, UnknownHostException {
         socket = new DatagramSocket();
@@ -29,7 +30,7 @@ public class NiceClient {
         requestCreator = new RequestCreator(serverAddress, user);
         try {
             if (!checkConnection()) {
-                System.out.println("\r\b\rСервер недоступен");
+                System.out.println("Сервер недоступен");
                 if (++connectionTries == 7) {
                     System.out.println("Время ожидания истекло. Штраф 1000 рублей");
                     return;
@@ -37,14 +38,16 @@ public class NiceClient {
                 throw new SocketTimeoutException();
             }
             connectionTries = 0;
-            user.printHello();
+            if (runningCommand == null) user.printHello();
+            else launchCommand(runningCommand);
             boolean isInterrupted = false;
             while (!isInterrupted) {
                 String[] newCommand = user.getNewCommand();
+                runningCommand = newCommand;
                 isInterrupted = launchCommand(newCommand);
             }
         } catch (SocketTimeoutException e) {
-            System.out.print("Переподключение");
+            System.out.println("Переподключение...");
             run();
         }
 
@@ -54,7 +57,7 @@ public class NiceClient {
         NiceToAwesomePacket checkPacket = requestCreator.createPacket(new String[] {"check"});
         requestCreator.sendResponse(checkPacket, socket, serverAddress, PORT);
         try {
-            AwesomeToNicePacket responsePacket = responseAcceptor.getResponsePacket();
+            responseAcceptor.getResponsePacket();
         } catch (SocketTimeoutException e) {
             return false;
         }
@@ -110,7 +113,7 @@ public class NiceClient {
         } catch (FileNotFoundException e) {
             System.out.println("Такого файла нет");
         } catch (IOException e) {
-            System.out.println("Я не знаю как вызвать это исключение");
+            System.out.println("Во время выполнения скрипта произошел разрыв соединения! Нам очень жаль...");
         } finally {
             if (listOfScripts.size() > 0) listOfScripts.removeLast();
             if (listOfScripts.size() == 0 && problemFiles.size() > 0) {
