@@ -20,9 +20,9 @@ public class ServerMain {
             if (args.length > 0) {
                 awesomeServer = new AwesomeServer(args[0]);
                 awesomeServer.run();
-            } else System.out.println("Нужен файл с коллекцией!");
+            } else logger.info("Нужен файл с коллекцией!");
         } catch (IOException e) {
-            logger.info(Arrays.toString(e.getStackTrace()));
+            logger.warn(Arrays.toString(e.getStackTrace()));
         }
     }
 }

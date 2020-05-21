@@ -17,7 +17,7 @@ public class CommandProcessor {
     private final LinkedList<StudyGroup> list = new LinkedList<>();
     @XmlElement
     private final Date dateOfInitialization = new Date();
-    private static final Logger logger = LoggerFactory.getLogger(AwesomeServer.class);
+    private static final Logger logger = LoggerFactory.getLogger(CommandProcessor.class);
 
     public CommandProcessor() {
         list.forEach(s -> StudyGroup.addId(s.getId()));
