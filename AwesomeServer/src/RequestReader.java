@@ -30,7 +30,7 @@ public class RequestReader {
             packet.setSocketAddress(address);
             return packet;
         } catch (ClassNotFoundException e) {
-            logger.warn("Класса StudyGroup неееет");
+            logger.warn("Класса неееет");
         } catch (IOException e) {
             logger.warn("Вашему вниманию представляется стектрейс {}", e.getMessage());
         }
