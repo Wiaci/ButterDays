@@ -53,13 +53,8 @@ public class CommandProcessor {
     }
 
     public AwesomeToNicePacket show() {
-        StringBuilder str = new StringBuilder();
         String s = list.stream()
-                .sorted((o1, o2) -> {
-                    if (o1.getName().compareTo(o2.getName()) > 0) return 1;
-                    else if (o1.getName().compareTo(o2.getName()) < 0) return -1;
-                    else return 0;
-                })
+                .sorted(Comparator.comparing(StudyGroup::getName))
                 .map(StudyGroup::toString)
                 .collect(Collectors.joining("\n"))
             ;
