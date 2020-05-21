@@ -5,13 +5,12 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 public class AwesomeServer {
-    private static Logger logger;
+    private static Logger logger = LoggerFactory.getLogger(AwesomeServer.class);
     private String filename;
     private CommandProcessor commandProcessor;
 
     public AwesomeServer(String filename) {
         this.filename = filename;
-        logger = LoggerFactory.getLogger(AwesomeServer.class);
     }
 
     public CommandProcessor getCommandProcessor() {

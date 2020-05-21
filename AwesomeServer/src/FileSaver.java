@@ -10,11 +10,7 @@ import java.util.Scanner;
 
 public class FileSaver {
 
-    private static Logger logger;
-
-    public FileSaver() {
-        logger = LoggerFactory.getLogger(AwesomeServer.class);
-    }
+    private static Logger logger = LoggerFactory.getLogger(AwesomeServer.class);
 
     /**
      * Метод загружает коллекцию из файла
