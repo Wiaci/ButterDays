@@ -9,7 +9,7 @@ import java.nio.channels.DatagramChannel;
 public class ResponseSender {
 
     DatagramChannel channel;
-    private static final Logger logger = LoggerFactory.getLogger(AwesomeServer.class);
+    private static final Logger logger = LoggerFactory.getLogger(ResponseSender.class);
 
     public ResponseSender(DatagramChannel channel) {
         this.channel = channel;

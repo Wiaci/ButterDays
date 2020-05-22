@@ -1,16 +1,13 @@
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.xml.bind.JAXBContext;
-import javax.xml.bind.JAXBException;
-import javax.xml.bind.Marshaller;
-import javax.xml.bind.Unmarshaller;
+import javax.xml.bind.*;
 import java.io.*;
 import java.util.Scanner;
 
 public class FileSaver {
 
-    private static Logger logger = LoggerFactory.getLogger(AwesomeServer.class);
+    private static Logger logger = LoggerFactory.getLogger(FileSaver.class);
 
     /**
      * Метод загружает коллекцию из файла

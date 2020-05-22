@@ -2,7 +2,6 @@ import sourse.*;
 import sourse.enums.*;
 import java.io.BufferedReader;
 import java.io.IOException;
-import java.util.ArrayList;
 import java.util.function.Function;
 import java.util.function.Predicate;
 
@@ -183,16 +182,18 @@ public class UserMagicInteract {
         } while(true);
     }
 
-    public <T> T readEnum(String helloMessage, T[] enums, String errorMessage) throws CtrlDException {
+    public <T> T readEnum(String helloMessage, T[] enums, String errorMessage, boolean isNecessary) throws CtrlDException {
         do {
             System.out.print(helloMessage);
             String line = getNewLine();
-            if (line.equals("")) return null;
+            if (line.equals("") && isNecessary) {
+                System.out.println(errorMessage);
+                continue;
+            } else if (line.equals("")) return null;
             else
                 for (T t: enums) {
-                    if (line.equals(t.toString())) {
+                    if (line.equals(t.toString()))
                         return t;
-                    }
                 }
             System.out.println(errorMessage);
         } while (true);
@@ -210,8 +211,9 @@ public class UserMagicInteract {
         float averageMark = read("Введите средний балл студентов: ", s -> s.matches("\\d{0,10}\\.?\\d{1,10}"),
                 Float::parseFloat, "Формат ввода неверный");
         FormOfEducation formOfEducation = readEnum("Введите форму обучения: ", FormOfEducation.values(),
-                "Такой формы обучения нет");
-        Semester semester = readEnum("Введите номер семестра: ", Semester.values(), "Такого номера семестра нет");
+                "Такой формы обучения нет", false);
+        Semester semester = readEnum("Введите номер семестра: ", Semester.values(),
+                "Такого номера семестра нет", false);
         String adminName = read("Введите имя админа группы: ", s -> !s.equals(""), s -> s,
                 "Строка не может быть пустой");
         float weight = read("Введите вес админа: ", s -> s.matches("\\d{0,10}\\.?\\d{1,10}"),
@@ -237,8 +239,10 @@ public class UserMagicInteract {
             System.out.println("Слишком длинный/короткий passportId");
         } while (true);
 
-        Color eyeColor = readEnum("Введите цвет глаз админа: ", Color.values(), "Формат ввода неверный");
-        Country nationality = readEnum("Введите национальность админа: ", Country.values(), "Такой страны нет");
+        Color eyeColor = readEnum("Введите цвет глаз админа: ", Color.values(),
+                "Формат ввода неверный", false);
+        Country nationality = readEnum("Введите национальность админа: ", Country.values(),
+                "Такой страны нет", true);
 
         return new StudyGroup(name, new Coordinates(x, y), studentsCount, averageMark, formOfEducation, semester,
                 new Person(adminName, weight, passportId, eyeColor, nationality));

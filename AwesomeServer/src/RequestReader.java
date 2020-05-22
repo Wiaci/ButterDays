@@ -5,12 +5,11 @@ import java.io.*;
 import java.net.SocketAddress;
 import java.nio.ByteBuffer;
 import java.nio.channels.DatagramChannel;
-import java.util.Arrays;
 
 public class RequestReader {
 
     DatagramChannel channel;
-    private static final Logger logger = LoggerFactory.getLogger(AwesomeServer.class);
+    private static final Logger logger = LoggerFactory.getLogger(RequestReader.class);
 
     public RequestReader(DatagramChannel channel) {
         this.channel = channel;

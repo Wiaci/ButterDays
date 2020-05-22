@@ -7,7 +7,7 @@ import org.slf4j.LoggerFactory;
 public class ServerMain {
 
     static AwesomeServer awesomeServer;
-    private static Logger logger = LoggerFactory.getLogger(AwesomeServer.class);
+    private static Logger logger = LoggerFactory.getLogger(ServerMain.class);
 
     public static void main(String[] args) {
         Runtime.getRuntime().addShutdownHook(new Thread(() -> {

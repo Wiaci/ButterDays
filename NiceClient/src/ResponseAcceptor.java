@@ -2,14 +2,11 @@ import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.net.*;
-import java.nio.ByteBuffer;
-import java.nio.channels.DatagramChannel;
 
 public class ResponseAcceptor {
 
     private DatagramSocket socket;
     private int secondsOfTrying;
-    private String symbol;
 
     public ResponseAcceptor(DatagramSocket socket) {
         this.socket = socket;
@@ -35,7 +32,7 @@ public class ResponseAcceptor {
         } catch (IOException e) {
             e.printStackTrace();
         } catch (ClassNotFoundException e) {
-            System.out.println("Класса неееет");
+            System.out.println("Класса"+ e.getCause() + "неееет");
         }
         return null;
     }

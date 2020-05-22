@@ -5,7 +5,6 @@ import sourse.StudyGroup;
 import sourse.enums.FormOfEducation;
 
 import javax.xml.bind.annotation.*;
-import java.lang.reflect.Array;
 import java.util.*;
 import java.util.stream.Collectors;
 
