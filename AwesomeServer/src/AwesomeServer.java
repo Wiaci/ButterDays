@@ -8,6 +8,7 @@ public class AwesomeServer {
     private static Logger logger = LoggerFactory.getLogger(AwesomeServer.class);
     private String filename;
     private CommandProcessor commandProcessor;
+    private static final String LOCAL_IP = "192.168.0.100";
 
     public AwesomeServer(String filename) {
         this.filename = filename;
@@ -22,7 +23,7 @@ public class AwesomeServer {
              DatagramChannel serverChannel = DatagramChannel.open()) {
             serverChannel.configureBlocking(false);
             logger.info("Открываем канал передачи");
-            InetSocketAddress address = new InetSocketAddress("127.0.0.1", 8000);
+            InetSocketAddress address = new InetSocketAddress(LOCAL_IP, 8000);
             logger.info("Адрес сокета {}", address);
             serverChannel.bind(address);
             logger.info("Канал привязан к сокету с адресом {}", address);

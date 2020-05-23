@@ -9,9 +9,9 @@ public class NiceClient {
     private ResponseAcceptor responseAcceptor;
     private RequestCreator requestCreator;
     private final DatagramSocket socket;
-    private final String SERVER_ADDRESS = "127.0.0.1";
+    private static final String SERVER_ADDRESS = "192.168.0.100";
     private InetAddress serverAddress;
-    private final int PORT = 8000;
+    private static final int PORT = 8000;
     private int connectionTries;
     private String[] runningCommand;
 
