@@ -16,7 +16,7 @@ public class RequestReader {
     }
 
     public NiceToAwesomePacket getNewPacket() {
-        ByteBuffer buffer = ByteBuffer.allocate(1024);
+        ByteBuffer buffer = ByteBuffer.allocate(2048);
         buffer.clear();
         try {
             SocketAddress address;
