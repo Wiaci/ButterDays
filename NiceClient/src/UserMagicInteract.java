@@ -1,3 +1,4 @@
+import packets.AwesomeToNicePacket;
 import sourse.*;
 import sourse.enums.*;
 import java.io.BufferedReader;
@@ -275,10 +276,30 @@ public class UserMagicInteract {
                 "я прошу отчислить меня из университета по собственному желанию!",
                 "на ответах майл ру фигни не скажут",
                 "это не цитата, а стиль жизни", "из-за ИТМО у меня беды с башкой",
-                "поставить свечку стоит 50 рублей"};
+                "поставить свечку стоит 50 рублей", "самое сложное - это самое сложное"};
         int i = (int) (Math.random() * quotes.length);
         System.out.println("Здравствуйте! Знаете ли вы, что " + quotes[i] + "?");
     }
+
+    public String[] getLoginAndPassword() throws CtrlDException {
+        System.out.print("Введите логин: ");
+        String login = getNewLine();
+        System.out.print("Введите пароль: ");
+        String password = getNewLine();
+        return new String[] {login, password};
+    }
+
+    public boolean wantToRegister() throws CtrlDException {
+        System.out.println("Безуспешно... Не хотите зарегистрироваться?(y/n)");
+        if (!getNewLine().equals("y")) {
+            System.out.println("Ну как хотите");
+            return false;
+        } else {
+            System.out.println("Добро пожаловать!");
+            return true;
+        }
+    }
+
 }
 
 class CtrlDException extends Exception { }

@@ -2,8 +2,6 @@ package sourse;
 
 import sourse.enums.*;
 
-import javax.xml.bind.annotation.*;
-import javax.xml.bind.annotation.adapters.*;
 import java.io.Serializable;
 import java.time.ZonedDateTime;
 import java.util.HashSet;
@@ -14,13 +12,11 @@ import java.util.Objects;
  * @author Вячесанн Станисеевич
  * @version 7.3
  */
-@XmlAccessorType(XmlAccessType.FIELD)
-@XmlType(name = "studyGroup")
+
 public class StudyGroup implements Comparable<StudyGroup>, Serializable {
     private Long id; //Поле не может быть null, Значение поля должно быть больше 0, Значение этого поля должно быть уникальным, Значение этого поля должно генерироваться автоматически
     private String name; //Поле не может быть null, Строка не может быть пустой
     private Coordinates coordinates; //Поле не может быть null
-    @XmlJavaTypeAdapter(ZonedDateTimeAdapter.class)
     private java.time.ZonedDateTime creationDate; //Поле не может быть null, Значение этого поля должно генерироваться автоматически
     private Long studentsCount; //Значение поля должно быть больше 0, Поле может быть null
     private float averageMark; //Значение поля должно быть больше 0
@@ -124,18 +120,5 @@ public class StudyGroup implements Comparable<StudyGroup>, Serializable {
     @Override
     public int hashCode() {
         return Objects.hash(id, studentsCount);
-    }
-}
-
-class ZonedDateTimeAdapter extends XmlAdapter<String, ZonedDateTime> {
-
-    @Override
-    public ZonedDateTime unmarshal(String s) throws Exception {
-        return ZonedDateTime.parse(s);
-    }
-
-    @Override
-    public String marshal(ZonedDateTime zonedDateTime) throws Exception {
-        return zonedDateTime.toString();
     }
 }

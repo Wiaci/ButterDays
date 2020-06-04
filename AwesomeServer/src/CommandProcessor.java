@@ -1,62 +1,73 @@
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import sourse.Person;
-import sourse.StudyGroup;
-import sourse.enums.FormOfEducation;
+import packets.AwesomeToNicePacket;
+import packets.NiceToAwesomePacket;
+import sourse.*;
+import sourse.enums.*;
 
-import javax.xml.bind.annotation.*;
+import java.sql.*;
 import java.util.*;
 import java.util.stream.Collectors;
 
-@XmlRootElement
-@XmlAccessorType(XmlAccessType.NONE)
-@XmlType
-public class CommandProcessor {
-    @XmlElement(name = "collection")
-    private final LinkedList<StudyGroup> list = new LinkedList<>();
-    @XmlElement
-    private final Date dateOfInitialization = new Date();
-    private static final Logger logger = LoggerFactory.getLogger(CommandProcessor.class);
 
-    public CommandProcessor() {
+public class CommandProcessor {
+    private LinkedList<StudyGroup> list;
+    private static final Logger logger = LoggerFactory.getLogger(CommandProcessor.class);
+    private DatabaseManager database;
+
+    public CommandProcessor(DatabaseManager database) throws SQLException {
+        this.database = database;
+        try {
+            list = database.load();
+        } catch (ButterDaysCorruptedException e) {
+            logger.info("Database is corrupted! ");
+            list = new LinkedList<>();
+        }
         list.forEach(s -> StudyGroup.addId(s.getId()));
         list.forEach(s -> Person.addPassportId(s.getGroupAdmin().getPassportID()));
     }
 
-    public AwesomeToNicePacket runCommand(NiceToAwesomePacket packet) {
+    public AwesomeToNicePacket runCommand(NiceToAwesomePacket packet) throws SQLException {
         String command = packet.getCommand()[0];
-        AwesomeToNicePacket nicePacket = null;
-        switch (command) {
-            case "check": nicePacket = new AwesomeToNicePacket("Done"); break;
-            case "info": nicePacket = info(); break;
-            case "add": nicePacket = add(packet.getStudyGroup()); break;
-            case "update": nicePacket = update(packet.getCommand()[1], packet.getStudyGroup()); break;
-            case "show": nicePacket = show(); break;
-            case "remove_by_id": nicePacket = removeByID(packet.getCommand()[1]); break;
-            case "clear": clear(); nicePacket = new AwesomeToNicePacket("clear Done"); break;
-            case "head": nicePacket = head(); break;
-            case "add_if_max": nicePacket = addIfMax(packet.getStudyGroup()); break;
-            case "remove_greater": nicePacket = removeGreater(packet.getStudyGroup()); break;
-            case "average_of_average_mark": nicePacket = averageOfAverageMark(); break;
-            case "count_less_than_form_of_education": nicePacket = countLessAndSoOn(packet.getCommand()[1]); break;
-            case "print_field_ascending_semester_enum": nicePacket = printFieldAndSoOn();
+        if (command.equals("register") || command.equals("check") ||
+                database.checkUser(packet.getLogin(), packet.getPassword())) {
+            AwesomeToNicePacket nicePacket = null;
+            switch (command) {
+                case "check": nicePacket = new AwesomeToNicePacket("Done"); break;
+                case "register": nicePacket = register(packet.getLogin(), packet.getPassword());
+                case "info": nicePacket = info(); break;
+                case "add": nicePacket = add(packet.getStudyGroup()); break;
+                case "update": nicePacket = update(packet.getCommand()[1], packet.getStudyGroup()); break;
+                case "show": nicePacket = show(); break;
+                case "remove_by_id": nicePacket = removeByID(packet.getCommand()[1]); break;
+                case "clear": clear(); nicePacket = new AwesomeToNicePacket("clear Done"); break;
+                case "head": nicePacket = head(); break;
+                case "add_if_max": nicePacket = addIfMax(packet.getStudyGroup()); break;
+                case "remove_greater": nicePacket = removeGreater(packet.getStudyGroup()); break;
+                case "average_of_average_mark": nicePacket = averageOfAverageMark(); break;
+                case "count_less_than_form_of_education": nicePacket = countLessAndSoOn(packet.getCommand()[1]); break;
+                case "print_field_ascending_semester_enum": nicePacket = printFieldAndSoOn();
+            }
+            logger.info("Команда {} выполнена", command);
+            return nicePacket;
         }
-        logger.info("Команда {} выполнена", command);
-        return nicePacket;
+        return new AwesomeToNicePacket("");
+    }
+
+    public AwesomeToNicePacket register(String login, String password) throws SQLException {
+        database.registerUser(login, password);
+        return new AwesomeToNicePacket("success");
     }
 
     public AwesomeToNicePacket info() {
-        String info = list.size() + " " +
-                dateOfInitialization.toString();
-        return new AwesomeToNicePacket("info " + info);
+        return new AwesomeToNicePacket("info " + list.size());
     }
 
     public AwesomeToNicePacket show() {
         String s = list.stream()
                 .sorted(Comparator.comparing(StudyGroup::getName))
                 .map(StudyGroup::toString)
-                .collect(Collectors.joining("\n"))
-            ;
+                .collect(Collectors.joining("\n"));
         return new AwesomeToNicePacket("show " + s);
     }
 
@@ -145,5 +156,7 @@ public class CommandProcessor {
                 .collect(Collectors.joining("\n"));
         return new AwesomeToNicePacket("print_field_ascending_semester_enum " + s);
     }
+
+
 
 }

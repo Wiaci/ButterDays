@@ -1,18 +1,16 @@
 import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.nio.channels.DatagramChannel;
+import java.sql.SQLException;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import packets.NiceToAwesomePacket;
 
 public class AwesomeServer {
     private static Logger logger = LoggerFactory.getLogger(AwesomeServer.class);
-    private String filename;
     private CommandProcessor commandProcessor;
-    private static final String LOCAL_IP = "192.168.0.100";
-
-    public AwesomeServer(String filename) {
-        this.filename = filename;
-    }
+    private static final String LOCAL_IP = "localhost";
 
     public CommandProcessor getCommandProcessor() {
         return commandProcessor;
@@ -28,7 +26,8 @@ public class AwesomeServer {
             serverChannel.bind(address);
             logger.info("Канал привязан к сокету с адресом {}", address);
             RequestReader requestReader = new RequestReader(serverChannel);
-            commandProcessor = FileSaver.load(filename);
+            DatabaseManager database = new DatabaseManager();
+            commandProcessor = new CommandProcessor(database);
             logger.info("Сервер запущен. ");
             ResponseSender responseSender = new ResponseSender(serverChannel);
             logger.info("Сервер ждёт команды от клиента.");
@@ -41,6 +40,8 @@ public class AwesomeServer {
                         packet.getSocketAddress());
                 logger.info("Отправка ответа");
             }
+        } catch (SQLException e) {
+            e.printStackTrace();
         }
     }
 

@@ -1,3 +1,6 @@
+import packets.AwesomeToNicePacket;
+import packets.NiceToAwesomePacket;
+
 import java.io.*;
 import java.net.*;
 import java.util.HashMap;
@@ -9,11 +12,14 @@ public class NiceClient {
     private ResponseAcceptor responseAcceptor;
     private RequestCreator requestCreator;
     private final DatagramSocket socket;
-    private static final String SERVER_ADDRESS = "192.168.0.100";
+    private static final String SERVER_ADDRESS = "localhost";
     private InetAddress serverAddress;
     private static final int PORT = 8000;
     private int connectionTries;
     private String[] runningCommand;
+
+    private String login;
+    private String password;
 
     public NiceClient() throws SocketException, UnknownHostException {
         socket = new DatagramSocket();
@@ -27,6 +33,7 @@ public class NiceClient {
                         new InputStreamReader(System.in)), false);
         responseAcceptor = new ResponseAcceptor(socket);
         requestCreator = new RequestCreator(serverAddress, user);
+
         try {
             if (!checkConnection()) {
                 System.out.println("Сервер недоступен");
@@ -53,10 +60,11 @@ public class NiceClient {
     }
 
     public boolean checkConnection() throws CtrlDException {
-        NiceToAwesomePacket checkPacket = requestCreator.createPacket(new String[] {"check"});
+        NiceToAwesomePacket checkPacket = requestCreator.createPacket(new String[] {"check"}, login, password);
         requestCreator.sendResponse(checkPacket, socket, serverAddress, PORT);
         try {
             responseAcceptor.getResponsePacket();
+            if (login == null) authorize();
         } catch (SocketTimeoutException e) {
             return false;
         }
@@ -78,7 +86,7 @@ public class NiceClient {
             System.out.println("Введи help и прозрей!");
             return false;
         }
-        NiceToAwesomePacket packetRequest = requestCreator.createPacket(newCommand);
+        NiceToAwesomePacket packetRequest = requestCreator.createPacket(newCommand, login, password);
         requestCreator.sendResponse(packetRequest, socket, serverAddress, PORT);
 
         AwesomeToNicePacket packetResponse = responseAcceptor.getResponsePacket();
@@ -127,5 +135,28 @@ public class NiceClient {
             user = new UserMagicInteract(new BufferedReader(new InputStreamReader(System.in)), false);
         }
     }
+    private void authorize() throws CtrlDException, SocketTimeoutException {
+        while (true) {
+            String[] data = user.getLoginAndPassword();
+            login = data[0];
+            password = data[1];
+            NiceToAwesomePacket packet = requestCreator.createPacket(new String[]{"authorize"}, login, password);
+            requestCreator.sendResponse(packet, socket, serverAddress, PORT);
+            AwesomeToNicePacket nicePacket = responseAcceptor.getResponsePacket();
+            if (!nicePacket.getResponse().equals("Success")) {
+                if (user.wantToRegister()) break;
+            } else {
+                System.out.println("О счастье, вы есть в базе!");
+                return;
+            }
+        }
+        String[] registrationData = user.getLoginAndPassword();
+        login = registrationData[0];
+        password = registrationData[1];
+        NiceToAwesomePacket packet = requestCreator.createPacket(new String[]{"register"}, login, password);
+        requestCreator.sendResponse(packet, socket, serverAddress, PORT);
+        responseAcceptor.getResponsePacket();
+    }
 }
-//
+//TODO: сделать регистрацию через JavaMail
+//TODO: хэширование паролей

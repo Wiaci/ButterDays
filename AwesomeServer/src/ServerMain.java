@@ -10,16 +10,14 @@ public class ServerMain {
     private static Logger logger = LoggerFactory.getLogger(ServerMain.class);
 
     public static void main(String[] args) {
-        Runtime.getRuntime().addShutdownHook(new Thread(() -> {
+        /*Runtime.getRuntime().addShutdownHook(new Thread(() -> {
             if (awesomeServer != null) {
-                FileSaver.save(awesomeServer.getCommandProcessor(), args[0]);
+                CollectionSaver.save(awesomeServer.getCommandProcessor(), args[0]);
             }
-        }));
+        }));*/
         try {
-            if (args.length > 0) {
-                awesomeServer = new AwesomeServer(args[0]);
-                awesomeServer.run();
-            } else logger.info("Нужен файл с коллекцией!");
+            awesomeServer = new AwesomeServer();
+            awesomeServer.run();
         } catch (IOException e) {
             logger.warn(Arrays.toString(e.getStackTrace()));
         }

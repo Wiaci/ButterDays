@@ -1,3 +1,5 @@
+import packets.NiceToAwesomePacket;
+
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.ObjectOutputStream;
@@ -34,9 +36,11 @@ public class RequestCreator {
         return byteArrayStream.toByteArray();
     }
 
-    public NiceToAwesomePacket createPacket(String[] command) throws CtrlDException {
+    public NiceToAwesomePacket createPacket(String[] command, String login, String password) throws CtrlDException {
         String firstWord = command[0];
         switch (firstWord) {
+            case "authorize":
+            case "register":
             case "check":
             case "info":
             case "show":
@@ -46,8 +50,8 @@ public class RequestCreator {
             case "print_field_ascending_semester_enum":
             case "remove_by_id":
             case "count_less_than_form_of_education":
-                return new NiceToAwesomePacket(command);
-            default: return new NiceToAwesomePacket(command, user.getStudyGroup());
+                return new NiceToAwesomePacket(command, login, password);
+            default: return new NiceToAwesomePacket(command, user.getStudyGroup(), login, password);
         }
     }
 }

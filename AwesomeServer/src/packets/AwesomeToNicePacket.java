@@ -1,3 +1,5 @@
+package packets;
+
 import java.io.Serializable;
 
 public class AwesomeToNicePacket implements Serializable {
