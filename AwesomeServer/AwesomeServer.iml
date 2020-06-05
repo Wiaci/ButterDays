@@ -27,5 +27,6 @@
       </library>
     </orderEntry>
     <orderEntry type="library" name="postgresql-42.2.12" level="project" />
+    <orderEntry type="library" name="dsn" level="project" />
   </component>
 </module>

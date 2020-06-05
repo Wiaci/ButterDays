@@ -1,8 +1,4 @@
 package sourse;
-
-import javax.xml.bind.annotation.XmlAccessType;
-import javax.xml.bind.annotation.XmlAccessorType;
-import javax.xml.bind.annotation.XmlType;
 import java.io.Serializable;
 
 /**
@@ -10,8 +6,7 @@ import java.io.Serializable;
  * @author Вячесанн Станисеевич
  * @version 7.3
  */
-@XmlAccessorType(XmlAccessType.FIELD)
-@XmlType(name = "coordinates")
+
 public class Coordinates implements Serializable {
     private int x;
     private Integer y; //Значение поля должно быть больше -791, Поле не может быть null
@@ -19,6 +14,14 @@ public class Coordinates implements Serializable {
     public Coordinates(int x, Integer y) {
         this.x = x;
         this.y = y;
+    }
+
+    public int getX() {
+        return x;
+    }
+
+    public int getY() {
+        return y;
     }
 
     private Coordinates() {};

@@ -138,12 +138,59 @@ public class DatabaseManager {
         return counter != 0;
     }
 
+    public boolean checkLogin(String login) throws SQLException {
+        PreparedStatement check = connection.prepareStatement("select * from users where login=?;");
+        check.setString(1, login);
+        ResultSet users = check.executeQuery();
+        int counter = 0;
+        while (users.next()) counter++;
+        return counter != 0;
+    }
+
     public void registerUser(String login, String password) throws SQLException {
         PreparedStatement registration = connection.prepareStatement("insert into users values(nextval('id_user'), ?, ?)");
         registration.setString(1, login);
         registration.setString(2, password);
         registration.execute();
     }
+
+
+
+    public int addGroup(StudyGroup studyGroup, String login) throws SQLException {
+        Statement getOwnerId = connection.createStatement();
+        ResultSet ownerId = getOwnerId.executeQuery("select id from users where login="+ login);
+        int id = 0;
+        while (ownerId.next()) {
+            id = ownerId.getInt(1);
+        }
+        if (id == 0) return -1;
+        PreparedStatement addStudyGroup =
+                connection.prepareStatement("insert into study_group values(" +
+                        "nextval('id_seq'), ?, ?, ?, ?, ?, ?, ?, currval('id_seq'), ?, ?);");
+        addStudyGroup.setString(1, studyGroup.getName());
+        addStudyGroup.setInt(2, studyGroup.getX());
+        addStudyGroup.setInt(3, studyGroup.getY());
+        addStudyGroup.setInt(4, (int) studyGroup.getStudentsCount());
+        addStudyGroup.setFloat(5, studyGroup.getAverageMark());
+        addStudyGroup.setString(6, studyGroup.getFormOfEducation() != null ?
+                studyGroup.getFormOfEducation().toString() : "null");
+        addStudyGroup.setString(7, studyGroup.getSemesterEnum() != null ? studyGroup.getSemesterEnum().toString() : "null");
+        addStudyGroup.setInt(8, id);
+        addStudyGroup.setString(9, studyGroup.getDateOfCreation().getDayOfMonth() + " " + studyGroup.getDateOfCreation().getMonth() + studyGroup.getDateOfCreation().getYear());
+        addStudyGroup.execute();
+
+        Person person = studyGroup.getGroupAdmin();
+        PreparedStatement addPerson = connection.prepareStatement("insert into person values(currval('id_seq'), ?, ?, ?, ?, ?)");
+        addPerson.setString(1, person.getName());
+        addPerson.setFloat(2, person.getWeight());
+        addPerson.setString(3, person.getPassportID() != null ? person.getPassportID() : "null");
+        addPerson.setString(4, person.getEyeColor() != null ? person.getEyeColor().toString() : "null");
+        addPerson.setString(5, person.getNationality().toString());
+        addPerson.execute();
+        return 0;
+    }
+
+
 
 
 }

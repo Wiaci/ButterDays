@@ -3,6 +3,7 @@ package sourse;
 import sourse.enums.*;
 
 import java.io.Serializable;
+import java.time.OffsetDateTime;
 import java.time.ZonedDateTime;
 import java.util.HashSet;
 import java.util.Objects;
@@ -23,6 +24,7 @@ public class StudyGroup implements Comparable<StudyGroup>, Serializable {
     private FormOfEducation formOfEducation; //Поле может быть null
     private Semester semesterEnum; //Поле может быть null
     private Person groupAdmin; //Поле не может быть null
+    private OffsetDateTime dateOfCreation;
     private static final HashSet<Long> idSet = new HashSet<>();
 
     public StudyGroup() {}
@@ -41,6 +43,7 @@ public class StudyGroup implements Comparable<StudyGroup>, Serializable {
         this.semesterEnum = semesterEnum;
         this.groupAdmin = groupAdmin;
         creationDate = ZonedDateTime.now();
+        dateOfCreation = OffsetDateTime.now();
     }
 
     public String getName() {
@@ -61,6 +64,18 @@ public class StudyGroup implements Comparable<StudyGroup>, Serializable {
                 '\n';
     }
 
+    public OffsetDateTime getDateOfCreation() {
+        return dateOfCreation;
+    }
+
+    public int getX() {
+        return coordinates.getX();
+    }
+
+    public int getY() {
+        return coordinates.getY();
+    }
+
     public Person getGroupAdmin() {
         return groupAdmin;
     }
@@ -77,7 +92,7 @@ public class StudyGroup implements Comparable<StudyGroup>, Serializable {
         return semesterEnum;
     }
 
-    public Long getStudentsCount() {
+    public long getStudentsCount() {
         return studentsCount;
     }
 

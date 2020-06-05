@@ -2,9 +2,8 @@ package sourse;
 
 import sourse.enums.*;
 
-import javax.xml.bind.annotation.*;
-import javax.xml.bind.annotation.adapters.*;
 import java.io.Serializable;
+import java.time.OffsetDateTime;
 import java.time.ZonedDateTime;
 import java.util.HashSet;
 import java.util.Objects;
@@ -14,19 +13,18 @@ import java.util.Objects;
  * @author Вячесанн Станисеевич
  * @version 7.3
  */
-@XmlAccessorType(XmlAccessType.FIELD)
-@XmlType(name = "studyGroup")
+
 public class StudyGroup implements Comparable<StudyGroup>, Serializable {
     private Long id; //Поле не может быть null, Значение поля должно быть больше 0, Значение этого поля должно быть уникальным, Значение этого поля должно генерироваться автоматически
     private String name; //Поле не может быть null, Строка не может быть пустой
     private Coordinates coordinates; //Поле не может быть null
-    @XmlJavaTypeAdapter(ZonedDateTimeAdapter.class)
     private java.time.ZonedDateTime creationDate; //Поле не может быть null, Значение этого поля должно генерироваться автоматически
     private Long studentsCount; //Значение поля должно быть больше 0, Поле может быть null
     private float averageMark; //Значение поля должно быть больше 0
     private FormOfEducation formOfEducation; //Поле может быть null
     private Semester semesterEnum; //Поле может быть null
     private Person groupAdmin; //Поле не может быть null
+    private OffsetDateTime dateOfCreation;
     private static final HashSet<Long> idSet = new HashSet<>();
 
     public StudyGroup() {}
@@ -45,6 +43,7 @@ public class StudyGroup implements Comparable<StudyGroup>, Serializable {
         this.semesterEnum = semesterEnum;
         this.groupAdmin = groupAdmin;
         creationDate = ZonedDateTime.now();
+        dateOfCreation = OffsetDateTime.now();
     }
 
     public String getName() {
@@ -65,6 +64,18 @@ public class StudyGroup implements Comparable<StudyGroup>, Serializable {
                 '\n';
     }
 
+    public OffsetDateTime getDateOfCreation() {
+        return dateOfCreation;
+    }
+
+    public int getX() {
+        return coordinates.getX();
+    }
+
+    public int getY() {
+        return coordinates.getY();
+    }
+
     public Person getGroupAdmin() {
         return groupAdmin;
     }
@@ -81,7 +92,7 @@ public class StudyGroup implements Comparable<StudyGroup>, Serializable {
         return semesterEnum;
     }
 
-    public Long getStudentsCount() {
+    public long getStudentsCount() {
         return studentsCount;
     }
 
@@ -124,18 +135,5 @@ public class StudyGroup implements Comparable<StudyGroup>, Serializable {
     @Override
     public int hashCode() {
         return Objects.hash(id, studentsCount);
-    }
-}
-
-class ZonedDateTimeAdapter extends XmlAdapter<String, ZonedDateTime> {
-
-    @Override
-    public ZonedDateTime unmarshal(String s) throws Exception {
-        return ZonedDateTime.parse(s);
-    }
-
-    @Override
-    public String marshal(ZonedDateTime zonedDateTime) throws Exception {
-        return zonedDateTime.toString();
     }
 }

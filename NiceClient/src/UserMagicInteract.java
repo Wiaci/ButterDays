@@ -3,6 +3,9 @@ import sourse.*;
 import sourse.enums.*;
 import java.io.BufferedReader;
 import java.io.IOException;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
+import java.util.Arrays;
 import java.util.function.Function;
 import java.util.function.Predicate;
 
@@ -289,8 +292,13 @@ public class UserMagicInteract {
         return new String[] {login, password};
     }
 
+    public String getEMail() throws CtrlDException {
+        System.out.print("Введите свою почту(gmail): ");
+        return getNewLine();
+    }
+
     public boolean wantToRegister() throws CtrlDException {
-        System.out.println("Безуспешно... Не хотите зарегистрироваться?(y/n)");
+        System.out.println("Не хотите зарегистрироваться?(y/n)");
         if (!getNewLine().equals("y")) {
             System.out.println("Ну как хотите");
             return false;
@@ -299,6 +307,8 @@ public class UserMagicInteract {
             return true;
         }
     }
+
+
 
 }
 

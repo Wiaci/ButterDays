@@ -1,0 +1,13 @@
+<component name="libraryTable">
+  <library name="dsn">
+    <CLASSES>
+      <root url="jar://$USER_HOME$/Desktop/Interference/javaMail/dsn.jar!/" />
+      <root url="jar://$USER_HOME$/Desktop/Interference/javaMail/imap.jar!/" />
+      <root url="jar://$USER_HOME$/Desktop/Interference/javaMail/mailapi.jar!/" />
+      <root url="jar://$USER_HOME$/Desktop/Interference/javaMail/pop3.jar!/" />
+      <root url="jar://$USER_HOME$/Desktop/Interference/javaMail/smtp.jar!/" />
+    </CLASSES>
+    <JAVADOC />
+    <SOURCES />
+  </library>
+</component>

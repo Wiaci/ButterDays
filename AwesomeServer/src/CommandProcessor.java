@@ -1,3 +1,4 @@
+import MailThings.MailSender;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import packets.AwesomeToNicePacket;
@@ -5,6 +6,9 @@ import packets.NiceToAwesomePacket;
 import sourse.*;
 import sourse.enums.*;
 
+import javax.mail.MessagingException;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
 import java.sql.*;
 import java.util.*;
 import java.util.stream.Collectors;
@@ -30,19 +34,20 @@ public class CommandProcessor {
     public AwesomeToNicePacket runCommand(NiceToAwesomePacket packet) throws SQLException {
         String command = packet.getCommand()[0];
         if (command.equals("register") || command.equals("check") ||
-                database.checkUser(packet.getLogin(), packet.getPassword())) {
+                database.checkUser(packet.getLogin(), doSomeHash(packet.getPassword()))) {
             AwesomeToNicePacket nicePacket = null;
             switch (command) {
+                case "authorize": nicePacket = new AwesomeToNicePacket("Success"); break;
                 case "check": nicePacket = new AwesomeToNicePacket("Done"); break;
-                case "register": nicePacket = register(packet.getLogin(), packet.getPassword());
+                case "register": nicePacket = register(packet.getLogin()); break;
                 case "info": nicePacket = info(); break;
-                case "add": nicePacket = add(packet.getStudyGroup()); break;
+                case "add": nicePacket = add(packet.getStudyGroup(), packet.getLogin()); break;
                 case "update": nicePacket = update(packet.getCommand()[1], packet.getStudyGroup()); break;
                 case "show": nicePacket = show(); break;
                 case "remove_by_id": nicePacket = removeByID(packet.getCommand()[1]); break;
                 case "clear": clear(); nicePacket = new AwesomeToNicePacket("clear Done"); break;
                 case "head": nicePacket = head(); break;
-                case "add_if_max": nicePacket = addIfMax(packet.getStudyGroup()); break;
+                case "add_if_max": nicePacket = addIfMax(packet.getStudyGroup(), packet.getLogin()); break;
                 case "remove_greater": nicePacket = removeGreater(packet.getStudyGroup()); break;
                 case "average_of_average_mark": nicePacket = averageOfAverageMark(); break;
                 case "count_less_than_form_of_education": nicePacket = countLessAndSoOn(packet.getCommand()[1]); break;
@@ -54,9 +59,24 @@ public class CommandProcessor {
         return new AwesomeToNicePacket("");
     }
 
-    public AwesomeToNicePacket register(String login, String password) throws SQLException {
-        database.registerUser(login, password);
-        return new AwesomeToNicePacket("success");
+    public AwesomeToNicePacket register(String email) throws SQLException {
+        try {
+            int passLength = (int) (Math.random() * 10 + 6);
+            StringBuilder passBuilder = new StringBuilder();
+            for (int i = 0; i < passLength; i++) {
+                int randomSymbolCode = (int) (Math.random() * 62 + 48);
+                if (randomSymbolCode > 57) randomSymbolCode += 7;
+                if (randomSymbolCode > 90) randomSymbolCode += 6;
+                passBuilder.append((char) randomSymbolCode);
+            }
+            if (database.checkLogin(email)) return new AwesomeToNicePacket("inBase");
+            String password = passBuilder.toString();
+            MailSender.send(email, password);
+            database.registerUser(email, doSomeHash(password));
+            return new AwesomeToNicePacket("success");
+        } catch (MessagingException e) {
+            return new AwesomeToNicePacket("wrong");
+        }
     }
 
     public AwesomeToNicePacket info() {
@@ -71,10 +91,11 @@ public class CommandProcessor {
         return new AwesomeToNicePacket("show " + s);
     }
 
-    public AwesomeToNicePacket add(StudyGroup group) {
+    public AwesomeToNicePacket add(StudyGroup group, String login) throws SQLException {
         if (!Person.getPassportIDSet().contains(group.getGroupAdmin().getPassportID())) {
             group.setId(StudyGroup.generateRandomId());
             list.add(group);
+            database.addGroup(group, login);
             StudyGroup.getIdSet().add(group.getId());
             return new AwesomeToNicePacket("add Succeed");
         } else return new AwesomeToNicePacket("add Failed passport");
@@ -119,10 +140,10 @@ public class CommandProcessor {
                     .toString());
         } else return new AwesomeToNicePacket("head Nothing");
     }
-    public AwesomeToNicePacket addIfMax(StudyGroup group) {
+    public AwesomeToNicePacket addIfMax(StudyGroup group, String login) throws SQLException {
         if (list.stream().
                 noneMatch(x -> x.compareTo(group) > 0)) {
-            return add(group);
+            return add(group, login);
         } else return new AwesomeToNicePacket("add Failed notMax");
     }
     public AwesomeToNicePacket removeGreater(StudyGroup group) {
@@ -155,6 +176,26 @@ public class CommandProcessor {
                 .map(Enum::toString)
                 .collect(Collectors.joining("\n"));
         return new AwesomeToNicePacket("print_field_ascending_semester_enum " + s);
+    }
+
+    private String doSomeHash(String rawPass) {
+        try {
+            MessageDigest messageDigest = MessageDigest.getInstance("SHA-1");
+            messageDigest.update(rawPass.getBytes());
+            byte[] digestBytes = messageDigest.digest();
+            StringBuilder hexString = new StringBuilder();
+            for (byte digestByte : digestBytes) {
+                String s = Integer.toHexString(0xff & digestByte);
+                s = (s.length() == 1) ? "0" + s : s;
+                hexString.append(s);
+            }
+            return hexString.toString();
+        } catch (NoSuchAlgorithmException e) {
+            System.out.println("Отправьте своему балбесу-программисту это сообщение:");
+            e.printStackTrace();
+            System.exit(-1);
+        }
+        return null;
     }
 
 

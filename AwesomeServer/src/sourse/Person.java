@@ -2,9 +2,6 @@ package sourse;
 
 import sourse.enums.Color;
 import sourse.enums.Country;
-import javax.xml.bind.annotation.XmlAccessType;
-import javax.xml.bind.annotation.XmlAccessorType;
-import javax.xml.bind.annotation.XmlType;
 import java.io.Serializable;
 import java.util.HashSet;
 
@@ -13,8 +10,7 @@ import java.util.HashSet;
  * @author Вячесанн Станисеевич
  * @version 7.3
  */
-@XmlType(name = "person")
-@XmlAccessorType(XmlAccessType.FIELD)
+
 public class Person implements Serializable {
     private String name; //Поле не может быть null, Строка не может быть пустой
     private float weight; //Значение поля должно быть больше 0
@@ -36,6 +32,22 @@ public class Person implements Serializable {
         passportIDSet.add(passportID);
         this.eyeColor = eyeColor;
         this.nationality = nationality;
+    }
+
+    public String getName() {
+        return name;
+    }
+
+    public float getWeight() {
+        return weight;
+    }
+
+    public Color getEyeColor() {
+        return eyeColor;
+    }
+
+    public Country getNationality() {
+        return nationality;
     }
 
     public static void clearPassportIdList() {

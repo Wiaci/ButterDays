@@ -27,7 +27,7 @@ public class NiceClient {
     }
 
     public void run() throws IOException, CtrlDException {
-        socket.setSoTimeout(1000);
+        socket.setSoTimeout(5000);
         user = new UserMagicInteract(
                 new BufferedReader(
                         new InputStreamReader(System.in)), false);
@@ -115,7 +115,6 @@ public class NiceClient {
                 if (!newLine.startsWith("execute_script") || !listOfScripts.contains(newLine.replaceFirst("execute_script", "").trim())) {
                     launchCommand(newLine.split(" "));
                 } else problemFiles.put(filename, newLine.replaceFirst("execute_script", "").trim());
-                /*System.out.println(listOfScripts);*/
             } while (true);
         } catch (FileNotFoundException e) {
             System.out.println("Такого файла нет");
@@ -136,6 +135,10 @@ public class NiceClient {
         }
     }
     private void authorize() throws CtrlDException, SocketTimeoutException {
+        if (user.wantToRegister()) {
+            register();
+            return;
+        };
         while (true) {
             String[] data = user.getLoginAndPassword();
             login = data[0];
@@ -144,19 +147,29 @@ public class NiceClient {
             requestCreator.sendResponse(packet, socket, serverAddress, PORT);
             AwesomeToNicePacket nicePacket = responseAcceptor.getResponsePacket();
             if (!nicePacket.getResponse().equals("Success")) {
+                System.out.print("Безуспешно... ");
                 if (user.wantToRegister()) break;
             } else {
                 System.out.println("О счастье, вы есть в базе!");
                 return;
             }
         }
-        String[] registrationData = user.getLoginAndPassword();
-        login = registrationData[0];
-        password = registrationData[1];
-        NiceToAwesomePacket packet = requestCreator.createPacket(new String[]{"register"}, login, password);
-        requestCreator.sendResponse(packet, socket, serverAddress, PORT);
-        responseAcceptor.getResponsePacket();
+        register();
+    }
+
+    private void register() throws CtrlDException, SocketTimeoutException {
+        String serverResponse;
+        do {
+            String email = user.getEMail();
+            NiceToAwesomePacket packet = requestCreator.createPacket(new String[]{"register"}, email, "");
+            requestCreator.sendResponse(packet, socket, serverAddress, PORT);
+            AwesomeToNicePacket nicePacket = responseAcceptor.getResponsePacket();
+            serverResponse = nicePacket.getResponse();
+            if (serverResponse.equals("success"))
+                System.out.println("Вы успешно зарегистрировались. На вашу почту был выслан пароль");
+            if (serverResponse.equals("inBase"))
+                System.out.println("Такой пользователь уже зарегистрирован");
+            authorize();
+        } while (!serverResponse.equals("success"));
     }
 }
-//TODO: сделать регистрацию через JavaMail
-//TODO: хэширование паролей
