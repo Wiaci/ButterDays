@@ -21,12 +21,7 @@ public class CommandProcessor {
 
     public CommandProcessor(DatabaseManager database) throws SQLException {
         this.database = database;
-        try {
-            list = database.load();
-        } catch (ButterDaysCorruptedException e) {
-            logger.info("Database is corrupted! ");
-            list = new LinkedList<>();
-        }
+        list = database.load();
         list.forEach(s -> StudyGroup.addId(s.getId()));
         list.forEach(s -> Person.addPassportId(s.getGroupAdmin().getPassportID()));
     }
@@ -42,9 +37,9 @@ public class CommandProcessor {
                 case "register": nicePacket = register(packet.getLogin()); break;
                 case "info": nicePacket = info(); break;
                 case "add": nicePacket = add(packet.getStudyGroup(), packet.getLogin()); break;
-                case "update": nicePacket = update(packet.getCommand()[1], packet.getStudyGroup()); break;
+                case "update": nicePacket = update(packet.getCommand()[1], packet.getStudyGroup(), packet.getLogin()); break;
                 case "show": nicePacket = show(); break;
-                case "remove_by_id": nicePacket = removeByID(packet.getCommand()[1]); break;
+                case "remove_by_id": nicePacket = removeByID(packet.getCommand()[1], packet.getLogin()); break;
                 case "clear": clear(); nicePacket = new AwesomeToNicePacket("clear Done"); break;
                 case "head": nicePacket = head(); break;
                 case "add_if_max": nicePacket = addIfMax(packet.getStudyGroup(), packet.getLogin()); break;
@@ -101,21 +96,25 @@ public class CommandProcessor {
         } else return new AwesomeToNicePacket("add Failed passport");
     }
 
-    public AwesomeToNicePacket update(String id, StudyGroup group) {
+    public AwesomeToNicePacket update(String id, StudyGroup group, String login) throws SQLException {
+        if (database.checkAccess(Long.parseLong(id), login)) return new AwesomeToNicePacket("update no access");
         if (StudyGroup.getIdSet().contains(Long.parseLong(id))) {
             if (!Person.getPassportIDSet().stream()
                     .filter(x -> !x.equals(group.getGroupAdmin().getPassportID()))
                     .collect(Collectors.toSet()).contains(group.getGroupAdmin().getPassportID())) {
-                removeByID(id);
+                removeByID(id, login);
                 group.setId(Long.parseLong(id));
                 list.add(group);
                 StudyGroup.addId(Long.parseLong(id));
+                database.update(Long.parseLong(id), login, group);
+                list = database.load();
                 return new AwesomeToNicePacket("update Succeed");
             } else return new AwesomeToNicePacket("update Failed passport");
         }
         return new AwesomeToNicePacket("update Failed id");
     }
-    public AwesomeToNicePacket removeByID(String id) {
+    public AwesomeToNicePacket removeByID(String id, String login) throws SQLException {
+        if (!database.checkAccess(Long.parseLong(id), login)) return new AwesomeToNicePacket("remove_by_id no access");
         if (StudyGroup.getIdSet().contains(Long.parseLong(id))) {
             StudyGroup a = list.stream()
                     .filter(x -> x.getId() == Long.parseLong(id))
@@ -124,13 +123,15 @@ public class CommandProcessor {
             list.remove(a);
             StudyGroup.getIdSet().remove(a.getId());
             Person.getPassportIDSet().remove(a.getGroupAdmin().getPassportID());
+            database.removeGroup(Long.parseLong(id));
             return new AwesomeToNicePacket("remove_by_id Succeed");
         } else return new AwesomeToNicePacket("remove_by_id Failed");
     }
-    public void clear() {
+    public void clear() throws SQLException {
         list.clear();
         StudyGroup.clearIdList();
         Person.clearPassportIdList();
+        database.clear();
     }
     public AwesomeToNicePacket head() {
         if (list.size() != 0) {
@@ -143,15 +144,18 @@ public class CommandProcessor {
     public AwesomeToNicePacket addIfMax(StudyGroup group, String login) throws SQLException {
         if (list.stream().
                 noneMatch(x -> x.compareTo(group) > 0)) {
-            return add(group, login);
+            AwesomeToNicePacket packet = add(group, login);
+            database.addGroup(group, login);
+            return packet;
         } else return new AwesomeToNicePacket("add Failed notMax");
     }
-    public AwesomeToNicePacket removeGreater(StudyGroup group) {
+    public AwesomeToNicePacket removeGreater(StudyGroup group) throws SQLException {
         int startSize = list.size();
         List<StudyGroup> greater = list.stream()
                 .filter(x -> x.compareTo(group) > 0)
                 .collect(Collectors.toList());
         greater.forEach(list::remove);
+        database.removeGreater(group);
         return new AwesomeToNicePacket("remove_greater " + (startSize - list.size()));
     }
     public AwesomeToNicePacket averageOfAverageMark() {
@@ -197,7 +201,4 @@ public class CommandProcessor {
         }
         return null;
     }
-
-
-
 }

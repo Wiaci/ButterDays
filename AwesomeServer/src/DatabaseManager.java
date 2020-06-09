@@ -35,8 +35,11 @@ public class DatabaseManager {
         return getPerson.executeQuery("select * from person where id=" + id);
     }
 
-    public LinkedList<StudyGroup> load() throws SQLException, ButterDaysCorruptedException {
-        if (!checkIntegrity()) throw new ButterDaysCorruptedException();
+    public LinkedList<StudyGroup> load() throws SQLException {
+        if (!checkIntegrity()) {
+            logger.info("Database is corrupted");
+            return new LinkedList<>();
+        };
         ResultSet studyGroupsSet = getStudyGroups();
         LinkedList<StudyGroup> collection = new LinkedList<>();
         if (!studyGroupsSet.first()) {
@@ -57,7 +60,10 @@ public class DatabaseManager {
             if (checkForNull != null) semester = Semester.valueOf(checkForNull);
 
             ResultSet admin = getPersonById(studyGroupsSet.getInt("admin_id"));
-            if (!admin.first()) throw new ButterDaysCorruptedException();
+            if (!admin.first()) {
+                logger.info("Database is corrupted");
+                return new LinkedList<>();
+            };
             String adminName = admin.getString("name");
             int weight = admin.getInt("weight");
             String passportId = admin.getString("passport_id");
@@ -107,24 +113,34 @@ public class DatabaseManager {
     private boolean checkIntegrity() throws SQLException {
         init();
         Statement checker = connection.createStatement(ResultSet.TYPE_SCROLL_INSENSITIVE, ResultSet.CONCUR_READ_ONLY);
-        if (!checker.execute("select * from study_group;")) return false;
-        if (!checker.execute("select * from person;")) return false;
-        if (!checker.execute("select * from users;")) return false;
         ResultSet groupAdminsIdSet = checker.executeQuery("select admin_id from study_group;");
         HashSet<Integer> groupAdminsId = new HashSet<>();
         while (groupAdminsIdSet.next())
             groupAdminsId.add(groupAdminsIdSet.getInt("admin_id"));
 
-        ResultSet ownersIdSet = checker.executeQuery("select owner_id from study_group;");
-        HashSet<Integer> ownersId = new HashSet<>();
-        while (ownersIdSet.next())
-            ownersId.add(ownersIdSet.getInt("owner_id"));
-        for (int adminsId : groupAdminsId)
-            if (!checker.execute("select * from person where id=" + adminsId))
-                return false;
-        for (int userId : ownersId)
-            if (!checker.execute("select * from users where id=" + userId))
-                return false;
+        ResultSet ownersLoginSet = checker.executeQuery("select owner_login from study_group;");
+        HashSet<String> ownersLogin = new HashSet<>();
+        while (ownersLoginSet.next())
+            ownersLogin.add(ownersLoginSet.getString(1));
+        for (int adminsId : groupAdminsId) {
+            ResultSet personSet = checker.executeQuery("select * from person where id=" + adminsId);
+            boolean isEmpty = true;
+            while (personSet.next()) {
+                isEmpty = false;
+            }
+            if (isEmpty) return false;
+        }
+
+        for (String userLogin : ownersLogin) {
+            PreparedStatement checker2 = connection.prepareStatement("select * from users where login=?");
+            checker2.setString(1, userLogin);
+            ResultSet loginSet = checker2.executeQuery();
+            boolean isEmpty = true;
+            while (loginSet.next()) {
+                isEmpty = false;
+            }
+            if (isEmpty) return false;
+        }
         return true;
     }
 
@@ -148,22 +164,28 @@ public class DatabaseManager {
     }
 
     public void registerUser(String login, String password) throws SQLException {
-        PreparedStatement registration = connection.prepareStatement("insert into users values(nextval('id_user'), ?, ?)");
+        PreparedStatement registration = connection.prepareStatement("insert into users values(?, ?)");
         registration.setString(1, login);
         registration.setString(2, password);
         registration.execute();
     }
 
-
-
-    public int addGroup(StudyGroup studyGroup, String login) throws SQLException {
-        Statement getOwnerId = connection.createStatement();
-        ResultSet ownerId = getOwnerId.executeQuery("select id from users where login="+ login);
-        int id = 0;
-        while (ownerId.next()) {
-            id = ownerId.getInt(1);
+    public boolean checkAccess(long id, String login) throws SQLException {
+        PreparedStatement getLogin = connection.prepareStatement("select owner_login from study_group where id =?;");
+        getLogin.setInt(1, (int) id);
+        ResultSet ownerLoginSet = getLogin.executeQuery();
+        String ownerLogin = "";
+        while (ownerLoginSet.next()) {
+            ownerLogin = ownerLoginSet.getString(1);
+            System.out.println(ownerLogin);
         }
-        if (id == 0) return -1;
+        if (!ownerLogin.isEmpty()) return false;
+        return login.equals(ownerLogin);
+    }
+
+
+
+    public void addGroup(StudyGroup studyGroup, String login) throws SQLException {
         PreparedStatement addStudyGroup =
                 connection.prepareStatement("insert into study_group values(" +
                         "nextval('id_seq'), ?, ?, ?, ?, ?, ?, ?, currval('id_seq'), ?, ?);");
@@ -173,24 +195,94 @@ public class DatabaseManager {
         addStudyGroup.setInt(4, (int) studyGroup.getStudentsCount());
         addStudyGroup.setFloat(5, studyGroup.getAverageMark());
         addStudyGroup.setString(6, studyGroup.getFormOfEducation() != null ?
-                studyGroup.getFormOfEducation().toString() : "null");
-        addStudyGroup.setString(7, studyGroup.getSemesterEnum() != null ? studyGroup.getSemesterEnum().toString() : "null");
-        addStudyGroup.setInt(8, id);
-        addStudyGroup.setString(9, studyGroup.getDateOfCreation().getDayOfMonth() + " " + studyGroup.getDateOfCreation().getMonth() + studyGroup.getDateOfCreation().getYear());
+                studyGroup.getFormOfEducation().toString() : null);
+        addStudyGroup.setString(7, studyGroup.getSemesterEnum() != null ? studyGroup.getSemesterEnum().toString() : null);
+        addStudyGroup.setString(8, login);
+        addStudyGroup.setDate(9, new java.sql.Date(Date.from(studyGroup.getDateOfCreation().toInstant()).getTime()));
+
         addStudyGroup.execute();
 
         Person person = studyGroup.getGroupAdmin();
         PreparedStatement addPerson = connection.prepareStatement("insert into person values(currval('id_seq'), ?, ?, ?, ?, ?)");
         addPerson.setString(1, person.getName());
         addPerson.setFloat(2, person.getWeight());
-        addPerson.setString(3, person.getPassportID() != null ? person.getPassportID() : "null");
-        addPerson.setString(4, person.getEyeColor() != null ? person.getEyeColor().toString() : "null");
+        addPerson.setString(3, person.getPassportID());
+        addPerson.setString(4, person.getEyeColor() != null ? person.getEyeColor().toString() : null);
         addPerson.setString(5, person.getNationality().toString());
         addPerson.execute();
-        return 0;
+
+        Statement getIds = connection.createStatement();
+        ResultSet ids = getIds.executeQuery("select id from study_group;");
+        int groupId = 0;
+        while(ids.next()) {
+            groupId = ids.getInt("id");
+        }
+        studyGroup.setId((long) groupId);
     }
 
+    public void addGroup(StudyGroup studyGroup, String login, long id) throws SQLException {
+        PreparedStatement addStudyGroup =
+                connection.prepareStatement("insert into study_group values(" +
+                        "?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);");
+        addStudyGroup.setInt(1, (int) id);
+        addStudyGroup.setString(2, studyGroup.getName());
+        addStudyGroup.setInt(3, studyGroup.getX());
+        addStudyGroup.setInt(4, studyGroup.getY());
+        addStudyGroup.setInt(5, (int) studyGroup.getStudentsCount());
+        addStudyGroup.setFloat(6, studyGroup.getAverageMark());
+        addStudyGroup.setString(7, studyGroup.getFormOfEducation() != null ?
+                studyGroup.getFormOfEducation().toString() : null);
+        addStudyGroup.setString(8, studyGroup.getSemesterEnum() != null ? studyGroup.getSemesterEnum().toString() : null);
+        addStudyGroup.setInt(9, (int) id);
+        addStudyGroup.setString(10, login);
+        addStudyGroup.setDate(11, new java.sql.Date(Date.from(studyGroup.getDateOfCreation().toInstant()).getTime()));
 
+        addStudyGroup.execute();
+
+        Person person = studyGroup.getGroupAdmin();
+        PreparedStatement addPerson = connection.prepareStatement("insert into person values(?, ?, ?, ?, ?, ?)");
+        addPerson.setInt(1, (int) id);
+        addPerson.setString(2, person.getName());
+        addPerson.setFloat(3, person.getWeight());
+        addPerson.setString(4, person.getPassportID());
+        addPerson.setString(5, person.getEyeColor() != null ? person.getEyeColor().toString() : null);
+        addPerson.setString(6, person.getNationality().toString());
+        addPerson.execute();
+
+        Statement getIds = connection.createStatement();
+        ResultSet ids = getIds.executeQuery("select id from study_group;");
+    }
+
+    public void update(long id, String login, StudyGroup group) throws SQLException {
+        Statement deleteGroup = connection.createStatement();
+        deleteGroup.execute("delete from study_group where id =" + id);
+        deleteGroup.execute("delete from person where id = " + id);
+        addGroup(group, login, id);
+        group.setId(id);
+    }
+
+    public void removeGroup(long id) throws SQLException {
+        connection.createStatement().execute("delete from study_group where id =" + id);
+        connection.createStatement().execute("delete from person where id =" + id);
+    }
+
+    public void clear() throws SQLException {
+        Statement deleteGroup = connection.createStatement();
+        deleteGroup.execute("delete from study_group");
+        deleteGroup.execute("delete from person");
+    }
+
+    public void removeGreater(StudyGroup group) throws SQLException {
+        long studentsCount = group.getStudentsCount();
+        ResultSet idSet = connection
+                .createStatement()
+                .executeQuery("select id from study_group where students_count>" + studentsCount);
+        connection.createStatement().execute("delete from study_group where students_count>" + studentsCount);
+        while (idSet.next()) {
+            int id = idSet.getInt(1);
+            connection.createStatement().execute("delete from person where id =" + id);
+        }
+    }
 
 
 }

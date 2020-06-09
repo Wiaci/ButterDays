@@ -2,9 +2,11 @@ import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.nio.channels.DatagramChannel;
 import java.sql.SQLException;
+import java.util.concurrent.*;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import packets.AwesomeToNicePacket;
 import packets.NiceToAwesomePacket;
 
 public class AwesomeServer {
@@ -32,15 +34,28 @@ public class AwesomeServer {
             ResponseSender responseSender = new ResponseSender(serverChannel);
             logger.info("Сервер ждёт команды от клиента.");
             while (true) {
-                NiceToAwesomePacket packet = requestReader.getNewPacket();
-                if (packet.getCommand()[0].equals("exit")) break;
 
-                responseSender.sendResponse(
-                        commandProcessor.runCommand(packet),
-                        packet.getSocketAddress());
+                Callable<NiceToAwesomePacket> task = requestReader::getNewPacket;
+                FutureTask<NiceToAwesomePacket> future = new FutureTask<>(task);
+                new Thread(future).start();
+                NiceToAwesomePacket packet = future.get();
+
+                Callable<AwesomeToNicePacket> call = () -> commandProcessor.runCommand(packet);
+                ExecutorService service = Executors.newCachedThreadPool();
+                Future<AwesomeToNicePacket> result = service.submit(call);
+                AwesomeToNicePacket nicePacket = result.get();
+
+                RecursiveAction action = new RecursiveAction() {
+                    @Override
+                    protected void compute() {
+                        responseSender.sendResponse(nicePacket, packet.getSocketAddress());
+                    }
+                };
+                action.fork();
+                action.join();
                 logger.info("Отправка ответа");
             }
-        } catch (SQLException e) {
+        } catch (SQLException | InterruptedException | ExecutionException e) {
             e.printStackTrace();
         }
     }

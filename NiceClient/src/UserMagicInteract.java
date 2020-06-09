@@ -45,7 +45,6 @@ public class UserMagicInteract {
 
     private void info(String response) {
         String[] strings = response.split(" ");
-        System.out.print("Дата иницализации коллекции: ");
         for (int i = 2; i < strings.length; i++) {
             System.out.print(strings[i] + " ");
         }
@@ -77,17 +76,20 @@ public class UserMagicInteract {
     private void update(String response) {
         String[] strings = response.split(" ");
         if (strings.length < 3) {
-            System.out.println("3начение элемента успешно обновлено.");
+             System.out.println("3начение элемента успешно обновлено.");
         } else if (strings[2].equals("id")) {
             System.out.println("3начение элемента успешно не обновлено так как id неверный.");
-        } else System.out.println("3начение элемента успешно не обновлено так как passportId неверный.");
+        } else if (strings[1].equals("no")) System.out.println("У вас нет прав на редактирование группы с этим id");
+        else System.out.println("3начение элемента успешно не обновлено так как passportId неверный.");
     }
 
     private void removeByID(String response) {
         String[] strings = response.split(" ");
+        System.out.println(Arrays.toString(strings));
         if (strings[1].equals("Succeed")) {
             System.out.println("Элемент удалён.");
-        } else System.out.println("У админа папа депутат. Ни в коем случае нельзя удалять!");
+        } else if (strings[1].equals("no")) System.out.println("У вас нет прав на редактирование группы с этим id");
+        else System.out.println("У админа папа депутат. Ни в коем случае нельзя удалять!");
     }
 
     private void clear() {
@@ -307,9 +309,6 @@ public class UserMagicInteract {
             return true;
         }
     }
-
-
-
 }
 
 class CtrlDException extends Exception { }
