@@ -12,7 +12,7 @@ public class NiceClient {
     private ResponseAcceptor responseAcceptor;
     private RequestCreator requestCreator;
     private final DatagramSocket socket;
-    private static final String SERVER_ADDRESS = "localhost";
+    private static final String SERVER_ADDRESS = "192.168.0.101";
     private InetAddress serverAddress;
     private static final int PORT = 8000;
     private int connectionTries;
@@ -43,6 +43,7 @@ public class NiceClient {
                 }
                 throw new SocketTimeoutException();
             }
+
             connectionTries = 0;
             if (runningCommand == null) user.printHello();
             else launchCommand(runningCommand);

@@ -6,14 +6,19 @@ import java.io.*;
 import java.net.SocketAddress;
 import java.nio.ByteBuffer;
 import java.nio.channels.DatagramChannel;
+import java.util.concurrent.Callable;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
-public class RequestReader {
+public class RequestReader implements Callable<NiceToAwesomePacket> {
 
     DatagramChannel channel;
     private static final Logger logger = LoggerFactory.getLogger(RequestReader.class);
+    ExecutorService service;
 
     public RequestReader(DatagramChannel channel) {
         this.channel = channel;
+        service = Executors.newCachedThreadPool();
     }
 
     public NiceToAwesomePacket getNewPacket() {
@@ -30,7 +35,7 @@ public class RequestReader {
             packet.setSocketAddress(address);
             return packet;
         } catch (ClassNotFoundException e) {
-            logger.warn("Класса"+ e.getCause() + "неееет");
+            logger.warn("Класса "+ e.getCause() + " неееет");
         } catch (IOException e) {
             logger.warn("Вашему вниманию представляется стектрейс {}", e.getMessage());
         }
@@ -43,4 +48,8 @@ public class RequestReader {
         return (NiceToAwesomePacket) inputStream.readObject();
     }
 
+    @Override
+    public NiceToAwesomePacket call() {
+        return getNewPacket();
+    }
 }

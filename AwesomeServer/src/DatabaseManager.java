@@ -179,7 +179,8 @@ public class DatabaseManager {
             ownerLogin = ownerLoginSet.getString(1);
             System.out.println(ownerLogin);
         }
-        if (!ownerLogin.isEmpty()) return false;
+        System.out.println("ownerlogin: " + ownerLogin);
+        System.out.println("login: " + login);
         return login.equals(ownerLogin);
     }
 
@@ -220,45 +221,29 @@ public class DatabaseManager {
         studyGroup.setId((long) groupId);
     }
 
-    public void addGroup(StudyGroup studyGroup, String login, long id) throws SQLException {
-        PreparedStatement addStudyGroup =
-                connection.prepareStatement("insert into study_group values(" +
-                        "?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);");
-        addStudyGroup.setInt(1, (int) id);
-        addStudyGroup.setString(2, studyGroup.getName());
-        addStudyGroup.setInt(3, studyGroup.getX());
-        addStudyGroup.setInt(4, studyGroup.getY());
-        addStudyGroup.setInt(5, (int) studyGroup.getStudentsCount());
-        addStudyGroup.setFloat(6, studyGroup.getAverageMark());
-        addStudyGroup.setString(7, studyGroup.getFormOfEducation() != null ?
-                studyGroup.getFormOfEducation().toString() : null);
-        addStudyGroup.setString(8, studyGroup.getSemesterEnum() != null ? studyGroup.getSemesterEnum().toString() : null);
-        addStudyGroup.setInt(9, (int) id);
-        addStudyGroup.setString(10, login);
-        addStudyGroup.setDate(11, new java.sql.Date(Date.from(studyGroup.getDateOfCreation().toInstant()).getTime()));
-
-        addStudyGroup.execute();
-
-        Person person = studyGroup.getGroupAdmin();
-        PreparedStatement addPerson = connection.prepareStatement("insert into person values(?, ?, ?, ?, ?, ?)");
-        addPerson.setInt(1, (int) id);
-        addPerson.setString(2, person.getName());
-        addPerson.setFloat(3, person.getWeight());
-        addPerson.setString(4, person.getPassportID());
-        addPerson.setString(5, person.getEyeColor() != null ? person.getEyeColor().toString() : null);
-        addPerson.setString(6, person.getNationality().toString());
-        addPerson.execute();
-
-        Statement getIds = connection.createStatement();
-        ResultSet ids = getIds.executeQuery("select id from study_group;");
-    }
-
-    public void update(long id, String login, StudyGroup group) throws SQLException {
-        Statement deleteGroup = connection.createStatement();
-        deleteGroup.execute("delete from study_group where id =" + id);
-        deleteGroup.execute("delete from person where id = " + id);
-        addGroup(group, login, id);
-        group.setId(id);
+    public void update(int id, StudyGroup group) throws SQLException {
+        PreparedStatement updater =
+                connection.prepareStatement(
+                        "update study_group set name=?, x=?, y=?,students_count=?, average_mark=?, form=?, sem=? where id=?;");
+        updater.setString(1, group.getName());
+        updater.setInt(2, group.getX());
+        updater.setInt(3, group.getY());
+        updater.setInt(4, (int) group.getStudentsCount());
+        updater.setFloat(5, group.getAverageMark());
+        updater.setString(6, group.getFormOfEducation() != null ? group.getFormOfEducation().toString() : null);
+        updater.setString(7, group.getSemesterEnum() != null ? group.getSemesterEnum().toString() : null);
+        updater.setInt(8, id);
+        updater.execute();
+        updater = connection.prepareStatement(
+                        "update person set name=?, weight=?,passport_id=?, eye_color=?, nationality=? where id=?;");
+        Person person = group.getGroupAdmin();
+        updater.setString(1, person.getName());
+        updater.setFloat(2, person.getWeight());
+        updater.setString(3, person.getPassportID());
+        updater.setString(4, person.getEyeColor() != null ? person.getEyeColor().toString() : null);
+        updater.setString(5, person.getNationality().toString());
+        updater.setInt(6, id);
+        updater.execute();
     }
 
     public void removeGroup(long id) throws SQLException {
@@ -266,25 +251,29 @@ public class DatabaseManager {
         connection.createStatement().execute("delete from person where id =" + id);
     }
 
-    public void clear() throws SQLException {
-        Statement deleteGroup = connection.createStatement();
-        deleteGroup.execute("delete from study_group");
-        deleteGroup.execute("delete from person");
-    }
-
-    public void removeGreater(StudyGroup group) throws SQLException {
-        long studentsCount = group.getStudentsCount();
-        ResultSet idSet = connection
-                .createStatement()
-                .executeQuery("select id from study_group where students_count>" + studentsCount);
-        connection.createStatement().execute("delete from study_group where students_count>" + studentsCount);
-        while (idSet.next()) {
-            int id = idSet.getInt(1);
+    public void clear(String login) throws SQLException {
+        PreparedStatement deleter = connection.prepareStatement("select id from study_group where owner_login = ?;");
+        deleter.setString(1, login);
+        ResultSet idToDelete = deleter.executeQuery();
+        while (idToDelete.next()) {
+            int id = idToDelete.getInt(1);
+            connection.createStatement().execute("delete from study_group where id =" + id);
             connection.createStatement().execute("delete from person where id =" + id);
         }
     }
 
-
+    public void removeGreater(StudyGroup group, String login) throws SQLException {
+        long studentsCount = group.getStudentsCount();
+        PreparedStatement st = connection.prepareStatement("select id from study_group where students_count > ? and owner_login = ?");
+        st.setInt(1, (int) studentsCount);
+        st.setString(2, login);
+        ResultSet idSet = st.executeQuery();
+        while (idSet.next()) {
+            int id = idSet.getInt(1);
+            connection.createStatement().execute("delete from study_group where id =" + id);
+            connection.createStatement().execute("delete from person where id =" + id);
+        }
+    }
 }
 
 class ButterDaysCorruptedException extends Exception {}

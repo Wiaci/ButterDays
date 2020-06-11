@@ -15,7 +15,7 @@ public class ResponseAcceptor {
     }
 
     public AwesomeToNicePacket getResponsePacket() throws SocketTimeoutException {
-        byte[] codedResponse = new byte[1024];
+        byte[] codedResponse = new byte[2048];
         DatagramPacket packetToReceive = new DatagramPacket(codedResponse, codedResponse.length);
         try {
             socket.receive(packetToReceive);

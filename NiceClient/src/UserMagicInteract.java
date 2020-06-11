@@ -26,6 +26,8 @@ public class UserMagicInteract {
     public void printResponse(AwesomeToNicePacket packet) {
         String response = packet.getResponse();
         switch (response.split(" ", 3)[0]) {
+            case "butterDays":
+                System.out.println("Возникла проблема с базой данных");
             case "info": info(response); break;
             case "show": show(response); break;
             case "add":
@@ -85,7 +87,6 @@ public class UserMagicInteract {
 
     private void removeByID(String response) {
         String[] strings = response.split(" ");
-        System.out.println(Arrays.toString(strings));
         if (strings[1].equals("Succeed")) {
             System.out.println("Элемент удалён.");
         } else if (strings[1].equals("no")) System.out.println("У вас нет прав на редактирование группы с этим id");
@@ -93,7 +94,7 @@ public class UserMagicInteract {
     }
 
     private void clear() {
-        System.out.println("Природа очистилась на столько, что из StudyGroup все самоизолировались.");
+        System.out.println("Природа очистилась на столько, что из StudyGroup самоизолировались все ваши группы.");
     }
 
     private void head(String response) {
@@ -216,9 +217,11 @@ public class UserMagicInteract {
                 Long::parseLong, "Формат ввода неверный");
         float averageMark = read("Введите средний балл студентов: ", s -> s.matches("\\d{0,10}\\.?\\d{1,10}"),
                 Float::parseFloat, "Формат ввода неверный");
-        FormOfEducation formOfEducation = readEnum("Введите форму обучения: ", FormOfEducation.values(),
+        FormOfEducation formOfEducation =
+                readEnum("Введите форму обучения (DISTANCE_EDUCATION, FULL_TIME_EDUCATION, EVENING_CLASSES): "
+                        , FormOfEducation.values(),
                 "Такой формы обучения нет", false);
-        Semester semester = readEnum("Введите номер семестра: ", Semester.values(),
+        Semester semester = readEnum("Введите номер семестра (FOURTH, FIFTH, SIXTH, EIGHTH): ", Semester.values(),
                 "Такого номера семестра нет", false);
         String adminName = read("Введите имя админа группы: ", s -> !s.equals(""), s -> s,
                 "Строка не может быть пустой");
@@ -245,9 +248,9 @@ public class UserMagicInteract {
             System.out.println("Слишком длинный/короткий passportId");
         } while (true);
 
-        Color eyeColor = readEnum("Введите цвет глаз админа: ", Color.values(),
+        Color eyeColor = readEnum("Введите цвет глаз админа (RED, YELLOW, ORANGE, BROWN): ", Color.values(),
                 "Формат ввода неверный", false);
-        Country nationality = readEnum("Введите национальность админа: ", Country.values(),
+        Country nationality = readEnum("Введите национальность админа (FRANCE, SPAIN, INDIA, JAPAN): ", Country.values(),
                 "Такой страны нет", true);
 
         return new StudyGroup(name, new Coordinates(x, y), studentsCount, averageMark, formOfEducation, semester,

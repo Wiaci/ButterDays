@@ -1,4 +1,5 @@
 import java.io.IOException;
+import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.nio.channels.DatagramChannel;
 import java.sql.SQLException;
@@ -12,7 +13,7 @@ import packets.NiceToAwesomePacket;
 public class AwesomeServer {
     private static Logger logger = LoggerFactory.getLogger(AwesomeServer.class);
     private CommandProcessor commandProcessor;
-    private static final String LOCAL_IP = "localhost";
+    private static String localIp;
 
     public CommandProcessor getCommandProcessor() {
         return commandProcessor;
@@ -23,7 +24,7 @@ public class AwesomeServer {
              DatagramChannel serverChannel = DatagramChannel.open()) {
             serverChannel.configureBlocking(false);
             logger.info("Открываем канал передачи");
-            InetSocketAddress address = new InetSocketAddress(LOCAL_IP, 8000);
+            InetSocketAddress address = new InetSocketAddress(InetAddress.getLocalHost().getHostAddress(), 8000);
             logger.info("Адрес сокета {}", address);
             serverChannel.bind(address);
             logger.info("Канал привязан к сокету с адресом {}", address);
@@ -33,6 +34,7 @@ public class AwesomeServer {
             logger.info("Сервер запущен. ");
             ResponseSender responseSender = new ResponseSender(serverChannel);
             logger.info("Сервер ждёт команды от клиента.");
+            ExecutorService service = Executors.newCachedThreadPool();
             while (true) {
 
                 Callable<NiceToAwesomePacket> task = requestReader::getNewPacket;
@@ -41,7 +43,7 @@ public class AwesomeServer {
                 NiceToAwesomePacket packet = future.get();
 
                 Callable<AwesomeToNicePacket> call = () -> commandProcessor.runCommand(packet);
-                ExecutorService service = Executors.newCachedThreadPool();
+
                 Future<AwesomeToNicePacket> result = service.submit(call);
                 AwesomeToNicePacket nicePacket = result.get();
 
