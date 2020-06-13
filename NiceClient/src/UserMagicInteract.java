@@ -90,7 +90,7 @@ public class UserMagicInteract {
         if (strings[1].equals("Succeed")) {
             System.out.println("Элемент удалён.");
         } else if (strings[1].equals("no")) System.out.println("У вас нет прав на редактирование группы с этим id");
-        else System.out.println("У админа папа депутат. Ни в коем случае нельзя удалять!");
+        else System.out.println("Группа с таким id на рукаве, но не в базе");
     }
 
     private void clear() {
@@ -104,8 +104,10 @@ public class UserMagicInteract {
             for (int i = 1; i < strings.length; i++) {
                 System.out.println(strings[i] + " ");
             }
+        } else {
+            System.out.println("Коллекция пустая, как полки с туалетной бумагой в магазине.");
         }
-        System.out.println("Коллекция пустая, как полки с туалетной бумагой в магазине.");
+
     }
 
     private void removeGreater(String response) {

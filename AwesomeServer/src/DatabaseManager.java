@@ -4,23 +4,21 @@ import sourse.*;
 import sourse.enums.*;
 
 import java.sql.*;
-import java.util.HashSet;
 import java.util.LinkedList;
 
 public class DatabaseManager {
 
-    private static final String DB_URL = "jdbc:postgresql://127.0.0.1:5432/studs";
+    private static final String DB_URL = "jdbc:postgresql://127.0.0.1:5432/studs1";
     private static final String USER = "postgres";
     private static final String PASS = "123";
     private static Logger logger = LoggerFactory.getLogger(DatabaseManager.class);
     private Connection connection;
 
-    public Connection getConnection() {
-        return connection;
-    }
-
-    public DatabaseManager() throws SQLException {
-        connection = DriverManager.getConnection(DB_URL, USER, PASS);
+    public DatabaseManager(String dbHost, String dbPort, String username, String password) throws SQLException {
+        String dbURL = "jdbc:postgresql://" + dbHost + ":" + dbPort + "/studs1";
+        System.out.println(dbURL);
+        connection = DriverManager.getConnection(dbURL, username, password);
+        //connection = DriverManager.getConnection(DB_URL, USER, PASS);
         logger.info("Database connected");
 
     }
@@ -31,19 +29,18 @@ public class DatabaseManager {
     }
 
     public ResultSet getPersonById(int id) throws SQLException {
-        Statement getPerson = connection.createStatement(ResultSet.TYPE_SCROLL_INSENSITIVE, ResultSet.CONCUR_READ_ONLY);
-        return getPerson.executeQuery("select * from person where id=" + id);
+        PreparedStatement getPerson = connection.prepareStatement("select * from person where id=?",
+                ResultSet.TYPE_SCROLL_INSENSITIVE, ResultSet.CONCUR_READ_ONLY);
+        getPerson.setInt(1, id);
+        return getPerson.executeQuery();
     }
 
     public LinkedList<StudyGroup> load() throws SQLException {
-        if (!checkIntegrity()) {
-            logger.info("Database is corrupted");
-            return new LinkedList<>();
-        };
+        init();
         ResultSet studyGroupsSet = getStudyGroups();
         LinkedList<StudyGroup> collection = new LinkedList<>();
         if (!studyGroupsSet.first()) {
-            logger.info("I'm there!");
+            logger.info("Коллекция пуста!");
             return collection;
         }
         do {
@@ -63,7 +60,7 @@ public class DatabaseManager {
             if (!admin.first()) {
                 logger.info("Database is corrupted");
                 return new LinkedList<>();
-            };
+            }
             String adminName = admin.getString("name");
             int weight = admin.getInt("weight");
             String passportId = admin.getString("passport_id");
@@ -81,7 +78,11 @@ public class DatabaseManager {
     }
 
     private void init() throws SQLException {
-        Statement toInit = connection.createStatement(ResultSet.TYPE_SCROLL_INSENSITIVE, ResultSet.CONCUR_READ_ONLY);
+        Statement toInit = connection.createStatement();
+        toInit.execute("CREATE TABLE IF NOT EXISTS USERS (\n" +
+                "    LOGIN VARCHAR(50) NOT NULL PRIMARY KEY,\n" +
+                "    PASS VARCHAR(50) NOT NULL\n" +
+                ");");
         toInit.execute("CREATE TABLE IF NOT EXISTS STUDY_GROUP (\n" +
                 "    ID INT PRIMARY KEY,\n" +
                 "    NAME VARCHAR(20) NOT NULL,\n" +
@@ -89,59 +90,21 @@ public class DatabaseManager {
                 "    Y INT NOT NULL CHECK(Y>-791),\n" +
                 "    STUDENTS_COUNT INT NOT NULL,\n" +
                 "    AVERAGE_MARK REAL NOT NULL,\n" +
-                "    FORM FORM_OF_EDUCATION,\n" +
-                "    SEM SEMESTER,\n" +
+                "    FORM VARCHAR(20) CHECK(FORM='DISTANCE_EDUCATION' OR FORM='FULL_TIME_EDUCATION' OR FORM='EVENING_CLASSES'),\n" +
+                "    SEM VARCHAR(10) CHECK(SEM='FOURTH' OR SEM='FIFTH' OR SEM='SIXTH' OR SEM='EIGHTH'),\n" +
                 "    ADMIN_ID INT UNIQUE NOT NULL,\n" +
-                "    OWNER_ID INT UNIQUE NOT NULL,\n" +
+                "    OWNER_LOGIN VARCHAR(50) NOT NULL REFERENCES USERS ON DELETE CASCADE,\n" +
                 "    CREATION_DATE DATE NOT NULL\n" +
                 ");");
         toInit.execute("CREATE TABLE IF NOT EXISTS PERSON (\n" +
-                "    ID INT PRIMARY KEY,\n" +
+                "    ID INT PRIMARY KEY REFERENCES STUDY_GROUP ON DELETE RESTRICT,\n" +
                 "    NAME VARCHAR(30) NOT NULL,\n" +
                 "    WEIGHT REAL NOT NULL,\n" +
-                "    PASSPORT_ID VARCHAR(20) UNIQUE CHECK(PASSPORT_ID SIMILAR TO '_{5,20}'),\n" +
-                "    EYE_COLOR COLOR,\n" +
-                "    NATIONALITY COUNTRY NOT NULL\n" +
+                "    PASSPORT_ID VARCHAR(20) UNIQUE CHECK(PASSPORT_ID SIMILAR TO '_{5,20}' OR PASSPORT_ID=NULL),\n" +
+                "    EYE_COLOR VARCHAR(10) CHECK(EYE_COLOR='RED' OR EYE_COLOR='YELLOW' OR EYE_COLOR='ORANGE' OR EYE_COLOR='BROWN'),\n" +
+                "    NATIONALITY VARCHAR(10) NOT NULL CHECK(NATIONALITY='FRANCE' OR NATIONALITY='SPAIN' OR NATIONALITY='INDIA' OR NATIONALITY='JAPAN')\n" +
                 ");");
-        toInit.execute("CREATE TABLE IF NOT EXISTS USERS (\n" +
-                "    ID INT PRIMARY KEY,\n" +
-                "    LOGIN VARCHAR(50) NOT NULL UNIQUE,\n" +
-                "    PASS VARCHAR(50) NOT NULL UNIQUE\n" +
-                ");");
-    }
-
-    private boolean checkIntegrity() throws SQLException {
-        init();
-        Statement checker = connection.createStatement(ResultSet.TYPE_SCROLL_INSENSITIVE, ResultSet.CONCUR_READ_ONLY);
-        ResultSet groupAdminsIdSet = checker.executeQuery("select admin_id from study_group;");
-        HashSet<Integer> groupAdminsId = new HashSet<>();
-        while (groupAdminsIdSet.next())
-            groupAdminsId.add(groupAdminsIdSet.getInt("admin_id"));
-
-        ResultSet ownersLoginSet = checker.executeQuery("select owner_login from study_group;");
-        HashSet<String> ownersLogin = new HashSet<>();
-        while (ownersLoginSet.next())
-            ownersLogin.add(ownersLoginSet.getString(1));
-        for (int adminsId : groupAdminsId) {
-            ResultSet personSet = checker.executeQuery("select * from person where id=" + adminsId);
-            boolean isEmpty = true;
-            while (personSet.next()) {
-                isEmpty = false;
-            }
-            if (isEmpty) return false;
-        }
-
-        for (String userLogin : ownersLogin) {
-            PreparedStatement checker2 = connection.prepareStatement("select * from users where login=?");
-            checker2.setString(1, userLogin);
-            ResultSet loginSet = checker2.executeQuery();
-            boolean isEmpty = true;
-            while (loginSet.next()) {
-                isEmpty = false;
-            }
-            if (isEmpty) return false;
-        }
-        return true;
+        toInit.execute("CREATE SEQUENCE IF NOT EXISTS ID_SEQ;");
     }
 
     public boolean checkUser(String login, String password) throws SQLException {
@@ -177,11 +140,15 @@ public class DatabaseManager {
         String ownerLogin = "";
         while (ownerLoginSet.next()) {
             ownerLogin = ownerLoginSet.getString(1);
-            System.out.println(ownerLogin);
         }
-        System.out.println("ownerlogin: " + ownerLogin);
-        System.out.println("login: " + login);
         return login.equals(ownerLogin);
+    }
+
+    public boolean isInBase(long id) throws SQLException {
+        PreparedStatement getId = connection.prepareStatement("select id from study_group where id=?;");
+        getId.setInt(1, (int) id);
+        ResultSet idInBase = getId.executeQuery();
+        return idInBase.next();
     }
 
 
@@ -247,8 +214,12 @@ public class DatabaseManager {
     }
 
     public void removeGroup(long id) throws SQLException {
-        connection.createStatement().execute("delete from study_group where id =" + id);
-        connection.createStatement().execute("delete from person where id =" + id);
+        PreparedStatement statement = connection.prepareStatement("delete from person where id =?");
+        statement.setInt(1, (int) id);
+        statement.execute();
+        statement = connection.prepareStatement("delete from study_group where id =?");
+        statement.setInt(1, (int) id);
+        statement.execute();
     }
 
     public void clear(String login) throws SQLException {
@@ -257,8 +228,12 @@ public class DatabaseManager {
         ResultSet idToDelete = deleter.executeQuery();
         while (idToDelete.next()) {
             int id = idToDelete.getInt(1);
-            connection.createStatement().execute("delete from study_group where id =" + id);
-            connection.createStatement().execute("delete from person where id =" + id);
+            PreparedStatement statement = connection.prepareStatement("delete from person where id =?");
+            statement.setInt(1, (int) id);
+            statement.execute();
+            statement = connection.prepareStatement("delete from study_group where id =?");
+            statement.setInt(1, (int) id);
+            statement.execute();
         }
     }
 
@@ -270,10 +245,12 @@ public class DatabaseManager {
         ResultSet idSet = st.executeQuery();
         while (idSet.next()) {
             int id = idSet.getInt(1);
-            connection.createStatement().execute("delete from study_group where id =" + id);
-            connection.createStatement().execute("delete from person where id =" + id);
+            PreparedStatement statement = connection.prepareStatement("delete from person where id =?");
+            statement.setInt(1, (int) id);
+            statement.execute();
+            statement = connection.prepareStatement("delete from study_group where id =?");
+            statement.setInt(1, (int) id);
+            statement.execute();
         }
     }
 }
-
-class ButterDaysCorruptedException extends Exception {}

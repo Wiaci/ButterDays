@@ -7,23 +7,37 @@ import sourse.*;
 import sourse.enums.*;
 
 import javax.mail.MessagingException;
+import java.nio.channels.DatagramChannel;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.sql.*;
 import java.util.*;
+import java.util.concurrent.ForkJoinPool;
+import java.util.concurrent.RecursiveAction;
+import java.util.concurrent.locks.ReadWriteLock;
+import java.util.concurrent.locks.ReentrantReadWriteLock;
 import java.util.stream.Collectors;
 
-
 public class CommandProcessor {
+
     private LinkedList<StudyGroup> list;
     private static final Logger logger = LoggerFactory.getLogger(CommandProcessor.class);
     private DatabaseManager database;
 
-    public CommandProcessor(DatabaseManager database) throws SQLException {
-        this.database = database;
-        list = database.load();
-        list.forEach(s -> StudyGroup.addId(s.getId()));
-        list.forEach(s -> Person.addPassportId(s.getGroupAdmin().getPassportID()));
+    private static ReadWriteLock readWriteLock = new ReentrantReadWriteLock();
+
+    public CommandProcessor(DatabaseManager database) {
+        try {
+            this.database = database;
+            list = database.load();
+            list.forEach(s -> StudyGroup.addId(s.getId()));
+            list.forEach(s -> Person.addPassportId(s.getGroupAdmin().getPassportID()));
+        } catch (SQLException e) {
+            e.printStackTrace();
+            logger.warn("Беды с базой");
+            System.exit(-100500);
+        }
+
     }
 
     public AwesomeToNicePacket runCommand(NiceToAwesomePacket packet) {
@@ -47,7 +61,7 @@ public class CommandProcessor {
                     case "remove_greater": nicePacket = removeGreater(packet.getStudyGroup(), packet.getLogin()); break;
                     case "average_of_average_mark": nicePacket = averageOfAverageMark(); break;
                     case "count_less_than_form_of_education": nicePacket = countLessAndSoOn(packet.getCommand()[1]); break;
-                    case "print_field_ascending_semester_enum": nicePacket = printFieldAndSoOn();
+                    case "print_field_ascending_semester_enum": nicePacket = printFieldAndSoOn(); break;
                 }
                 logger.info("Команда {} выполнена", command);
                 return nicePacket;
@@ -55,6 +69,7 @@ public class CommandProcessor {
             return new AwesomeToNicePacket("");
         } catch (SQLException e) {
             logger.warn("Оказия с базой данных!");
+            e.printStackTrace();
             return new AwesomeToNicePacket("butterDays problem");
         }
     }
@@ -80,46 +95,61 @@ public class CommandProcessor {
     }
 
     public AwesomeToNicePacket info() {
-        return new AwesomeToNicePacket("info " + list.size());
+        readWriteLock.readLock().lock();
+        int size = list.size();
+        readWriteLock.readLock().unlock();
+        return new AwesomeToNicePacket("info " + size);
     }
 
     public AwesomeToNicePacket show() {
+        readWriteLock.readLock().lock();
         String s = list.stream()
                 .sorted(Comparator.comparing(StudyGroup::getName))
                 .map(StudyGroup::toString)
                 .collect(Collectors.joining("\n"));
+        readWriteLock.readLock().unlock();
         return new AwesomeToNicePacket("show " + s);
     }
 
     public AwesomeToNicePacket add(StudyGroup group, String login) throws SQLException {
-        if (!Person.getPassportIDSet().contains(group.getGroupAdmin().getPassportID())) {
+        if (!Person.getPassportIDSet().contains(group.getGroupAdmin().getPassportID()) || group.getGroupAdmin().getPassportID() == null) {
             database.addGroup(group, login);
+            readWriteLock.writeLock().lock();
             list.add(group);
             StudyGroup.getIdSet().add(group.getId());
+            readWriteLock.writeLock().unlock();
             return new AwesomeToNicePacket("add Succeed");
-        } else return new AwesomeToNicePacket("add Failed passport");
+        } else {
+            System.out.println(Person.getPassportIDSet());
+            return new AwesomeToNicePacket("add Failed passport");
+        }
     }
 
     public AwesomeToNicePacket update(String id, StudyGroup group, String login) throws SQLException {
+        if (!database.isInBase(Long.parseLong(id))) return new AwesomeToNicePacket("update Failed id");
         if (!database.checkAccess(Long.parseLong(id), login)) return new AwesomeToNicePacket("update no access");
-        if (!StudyGroup.getIdSet().contains(Long.parseLong(id))) return new AwesomeToNicePacket("update Failed id");
+        readWriteLock.readLock().lock();
         if (list.stream()
                 .anyMatch(x -> x.getId() != Long.parseLong(id) && x.getGroupAdmin().getPassportID() != null
                  && x.getGroupAdmin().getPassportID().equals(group.getGroupAdmin().getPassportID()))) {
             return new AwesomeToNicePacket("update Failed passport");
         }
-
+        readWriteLock.readLock().unlock();
+        readWriteLock.writeLock().lock();
         database.update(Integer.parseInt(id), group);
         list = database.load();
         StudyGroup.clearIdList();
         Person.clearPassportIdList();
         list.forEach(s -> StudyGroup.addId(s.getId()));
         list.forEach(s -> Person.addPassportId(s.getGroupAdmin().getPassportID()));
+        readWriteLock.writeLock().unlock();
         return new AwesomeToNicePacket("update Succeed");
     }
 
     public AwesomeToNicePacket removeByID(String id, String login) throws SQLException {
+        if (!database.isInBase(Long.parseLong(id))) return new AwesomeToNicePacket("remove_by_id Failed");
         if (!database.checkAccess(Long.parseLong(id), login)) return new AwesomeToNicePacket("remove_by_id no access");
+        readWriteLock.writeLock().lock();
         if (StudyGroup.getIdSet().contains(Long.parseLong(id))) {
             database.removeGroup(Long.parseLong(id));
             StudyGroup a = list.stream()
@@ -129,62 +159,104 @@ public class CommandProcessor {
             list.remove(a);
             StudyGroup.getIdSet().remove(a.getId());
             Person.getPassportIDSet().remove(a.getGroupAdmin().getPassportID());
+            readWriteLock.writeLock().unlock();
             return new AwesomeToNicePacket("remove_by_id Succeed");
-        } else return new AwesomeToNicePacket("remove_by_id Failed");
+        } else {
+            readWriteLock.writeLock().unlock();
+            return new AwesomeToNicePacket("remove_by_id Failed");
+        }
     }
+
     public void clear(String login) throws SQLException {
+        readWriteLock.writeLock().lock();
         database.clear(login);
         list = database.load();
         StudyGroup.clearIdList();
         Person.clearPassportIdList();
         list.forEach(s -> StudyGroup.addId(s.getId()));
         list.forEach(s -> Person.addPassportId(s.getGroupAdmin().getPassportID()));
+        readWriteLock.writeLock().unlock();
     }
     public AwesomeToNicePacket head() {
+        readWriteLock.readLock().lock();
         if (list.size() != 0) {
-            return new AwesomeToNicePacket(list.stream()
+            AwesomeToNicePacket packet = new AwesomeToNicePacket("head " + list.stream()
                     .findFirst()
                     .orElse(new StudyGroup())
                     .toString());
-        } else return new AwesomeToNicePacket("head Nothing");
+            readWriteLock.readLock().unlock();
+            return packet;
+        } else {
+            readWriteLock.readLock().unlock();
+            return new AwesomeToNicePacket("head Nothing");
+        }
     }
     public AwesomeToNicePacket addIfMax(StudyGroup group, String login) throws SQLException {
+        readWriteLock.writeLock().lock();
         if (list.stream().
                 noneMatch(x -> x.compareTo(group) > 0)) {
+            readWriteLock.writeLock().lock();
             database.addGroup(group, login);
-            return add(group, login);
-        } else return new AwesomeToNicePacket("add Failed notMax");
+            AwesomeToNicePacket packet = add(group, login);
+            readWriteLock.writeLock().unlock();
+            return packet;
+        } else {
+            readWriteLock.writeLock().unlock();
+            return new AwesomeToNicePacket("add Failed notMax");
+        }
     }
     public AwesomeToNicePacket removeGreater(StudyGroup group, String login) throws SQLException {
+        readWriteLock.writeLock().lock();
         int startSize = list.size();
-        List<StudyGroup> greater = list.stream()
-                .filter(x -> x.compareTo(group) > 0)
-                .collect(Collectors.toList());
-        greater.forEach(list::remove);
         database.removeGreater(group, login);
+        list = database.load();
+        StudyGroup.clearIdList();
+        Person.clearPassportIdList();
+        list.forEach(s -> StudyGroup.addId(s.getId()));
+        list.forEach(s -> Person.addPassportId(s.getGroupAdmin().getPassportID()));
+        readWriteLock.writeLock().unlock();
         return new AwesomeToNicePacket("remove_greater " + (startSize - list.size()));
     }
     public AwesomeToNicePacket averageOfAverageMark() {
+        readWriteLock.readLock().lock();
         float average = (float) list.stream()
                 .mapToDouble(StudyGroup::getAverageMark)
                 .average()
                 .orElse(0);
+        readWriteLock.readLock().unlock();
         return new AwesomeToNicePacket("average_of_average_mark " + average);
     }
     public AwesomeToNicePacket countLessAndSoOn(String formOfEducation) {
-        return new AwesomeToNicePacket("count_less_than_form_of_education " + (list.stream()
-                .filter(x -> x.getFormOfEducation() != null)
-                .filter(x -> x
-                        .getFormOfEducation()
-                        .compareTo(FormOfEducation.valueOf(formOfEducation)) < 0)
-                .count()));
+       readWriteLock.readLock().lock();
+       long count = list.stream()
+               .filter(x -> x.getFormOfEducation() != null)
+               .filter(x -> x
+                       .getFormOfEducation()
+                       .compareTo(FormOfEducation.valueOf(formOfEducation)) < 0)
+               .count();
+       readWriteLock.readLock().unlock();
+       return new AwesomeToNicePacket("count_less_than_form_of_education " + count);
     }
-    public AwesomeToNicePacket printFieldAndSoOn() {
+
+    /*public AwesomeToNicePacket show() {
+        readWriteLock.readLock().lock();
         String s = list.stream()
+                .sorted(Comparator.comparing(StudyGroup::getName))
+                .map(StudyGroup::toString)
+                .collect(Collectors.joining("\n"));
+        readWriteLock.readLock().unlock();
+        return new AwesomeToNicePacket("show " + s);
+    }*/
+
+    public AwesomeToNicePacket printFieldAndSoOn() {
+        readWriteLock.readLock().lock();
+        String s = list.stream()
+                .filter(x -> x.getSemesterEnum() != null)
                 .map(StudyGroup::getSemesterEnum)
                 .sorted()
                 .map(Enum::toString)
                 .collect(Collectors.joining("\n"));
+        readWriteLock.readLock().unlock();
         return new AwesomeToNicePacket("print_field_ascending_semester_enum " + s);
     }
 
@@ -201,10 +273,32 @@ public class CommandProcessor {
             }
             return hexString.toString();
         } catch (NoSuchAlgorithmException e) {
-            System.out.println("Отправьте своему балбесу-программисту это сообщение:");
+            System.out.println("Отправьте балбесу-программисту это сообщение:");
             e.printStackTrace();
             System.exit(-1);
         }
         return null;
+    }
+
+
+}
+
+class DoCommand implements Runnable {
+    private NiceToAwesomePacket packet;
+    private DatagramChannel channel;
+    private static ForkJoinPool forkJoinPool = new ForkJoinPool();
+    private CommandProcessor commandProcessor;
+
+    public DoCommand(NiceToAwesomePacket packet, DatagramChannel channel, CommandProcessor commandProcessor) {
+        this.packet = packet;
+        this.channel = channel;
+        this.commandProcessor = commandProcessor;
+    }
+
+    @Override
+    public void run() {
+        AwesomeToNicePacket result = commandProcessor.runCommand(packet);
+        RecursiveAction task = new ResponseSender(channel, result, packet.getSocketAddress());
+        forkJoinPool.invoke(task);
     }
 }

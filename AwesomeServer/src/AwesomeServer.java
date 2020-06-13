@@ -1,6 +1,7 @@
 import java.io.IOException;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
+import java.net.SocketAddress;
 import java.nio.channels.DatagramChannel;
 import java.sql.SQLException;
 import java.util.concurrent.*;
@@ -12,11 +13,15 @@ import packets.NiceToAwesomePacket;
 
 public class AwesomeServer {
     private static Logger logger = LoggerFactory.getLogger(AwesomeServer.class);
-    private CommandProcessor commandProcessor;
-    private static String localIp;
+    private DatabaseManager database;
 
-    public CommandProcessor getCommandProcessor() {
-        return commandProcessor;
+    public AwesomeServer(String dbHost, String dbPort, String username, String password) {
+        try {
+            database = new DatabaseManager(dbHost, dbPort, username, password);
+        } catch (SQLException e) {
+            logger.warn("Connection to database failed!");
+            System.exit(2);
+        }
     }
 
     public void run() throws IOException {
@@ -28,37 +33,16 @@ public class AwesomeServer {
             logger.info("Адрес сокета {}", address);
             serverChannel.bind(address);
             logger.info("Канал привязан к сокету с адресом {}", address);
-            RequestReader requestReader = new RequestReader(serverChannel);
-            DatabaseManager database = new DatabaseManager();
-            commandProcessor = new CommandProcessor(database);
             logger.info("Сервер запущен. ");
-            ResponseSender responseSender = new ResponseSender(serverChannel);
             logger.info("Сервер ждёт команды от клиента.");
-            ExecutorService service = Executors.newCachedThreadPool();
+            RequestReader reader = new RequestReader(serverChannel);
+            CommandProcessor processor = new CommandProcessor(database);
             while (true) {
-
-                Callable<NiceToAwesomePacket> task = requestReader::getNewPacket;
-                FutureTask<NiceToAwesomePacket> future = new FutureTask<>(task);
-                new Thread(future).start();
-                NiceToAwesomePacket packet = future.get();
-
-                Callable<AwesomeToNicePacket> call = () -> commandProcessor.runCommand(packet);
-
-                Future<AwesomeToNicePacket> result = service.submit(call);
-                AwesomeToNicePacket nicePacket = result.get();
-
-                RecursiveAction action = new RecursiveAction() {
-                    @Override
-                    protected void compute() {
-                        responseSender.sendResponse(nicePacket, packet.getSocketAddress());
-                    }
-                };
-                action.fork();
-                action.join();
-                logger.info("Отправка ответа");
+                SocketAddress socketAddress = reader.getAddress();
+                new Thread(new RequestReader(
+                        serverChannel, database, socketAddress, reader.getBuffer(), processor))
+                        .start();
             }
-        } catch (SQLException | InterruptedException | ExecutionException e) {
-            e.printStackTrace();
         }
     }
 

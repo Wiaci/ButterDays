@@ -12,18 +12,20 @@ public class NiceClient {
     private ResponseAcceptor responseAcceptor;
     private RequestCreator requestCreator;
     private final DatagramSocket socket;
-    private static final String SERVER_ADDRESS = "192.168.0.101";
     private InetAddress serverAddress;
-    private static final int PORT = 8000;
+    private int port;
     private int connectionTries;
     private String[] runningCommand;
 
     private String login;
     private String password;
 
-    public NiceClient() throws SocketException, UnknownHostException {
+    public NiceClient(InetAddress serverAddress, String port) throws SocketException{
+        if (port.matches("\\d{1,5}")) {
+            this.port = Integer.parseInt(port);
+        }
         socket = new DatagramSocket();
-        serverAddress = InetAddress.getByName(SERVER_ADDRESS);
+        this.serverAddress = serverAddress;
     }
 
     public void run() throws IOException, CtrlDException {
@@ -62,7 +64,7 @@ public class NiceClient {
 
     public boolean checkConnection() throws CtrlDException {
         NiceToAwesomePacket checkPacket = requestCreator.createPacket(new String[] {"check"}, login, password);
-        requestCreator.sendResponse(checkPacket, socket, serverAddress, PORT);
+        requestCreator.sendResponse(checkPacket, socket, serverAddress, port);
         try {
             responseAcceptor.getResponsePacket();
             if (login == null) authorize();
@@ -88,7 +90,7 @@ public class NiceClient {
             return false;
         }
         NiceToAwesomePacket packetRequest = requestCreator.createPacket(newCommand, login, password);
-        requestCreator.sendResponse(packetRequest, socket, serverAddress, PORT);
+        requestCreator.sendResponse(packetRequest, socket, serverAddress, port);
 
         AwesomeToNicePacket packetResponse = responseAcceptor.getResponsePacket();
         user.printResponse(packetResponse);
@@ -145,7 +147,7 @@ public class NiceClient {
             login = data[0];
             password = data[1];
             NiceToAwesomePacket packet = requestCreator.createPacket(new String[]{"authorize"}, login, password);
-            requestCreator.sendResponse(packet, socket, serverAddress, PORT);
+            requestCreator.sendResponse(packet, socket, serverAddress, port);
             AwesomeToNicePacket nicePacket = responseAcceptor.getResponsePacket();
             if (!nicePacket.getResponse().equals("Success")) {
                 System.out.print("Безуспешно... ");
@@ -163,14 +165,18 @@ public class NiceClient {
         do {
             String email = user.getEMail();
             NiceToAwesomePacket packet = requestCreator.createPacket(new String[]{"register"}, email, "");
-            requestCreator.sendResponse(packet, socket, serverAddress, PORT);
+            requestCreator.sendResponse(packet, socket, serverAddress, port);
             AwesomeToNicePacket nicePacket = responseAcceptor.getResponsePacket();
             serverResponse = nicePacket.getResponse();
-            if (serverResponse.equals("success"))
+            if (serverResponse.equals("success")) {
                 System.out.println("Вы успешно зарегистрировались. На вашу почту был выслан пароль");
-            if (serverResponse.equals("inBase"))
+                authorize();
+            }
+            if (serverResponse.equals("inBase")) {
                 System.out.println("Такой пользователь уже зарегистрирован");
-            authorize();
+                authorize();
+                serverResponse = "success";
+            }
         } while (!serverResponse.equals("success"));
     }
 }
