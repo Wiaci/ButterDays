@@ -1,18 +1,15 @@
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import sourse.Coordinates;
-import sourse.Person;
-import sourse.StudyGroup;
-import sourse.enums.Color;
-import sourse.enums.Country;
-import sourse.enums.FormOfEducation;
-import sourse.enums.Semester;
+import ClientServerCommunicaion.sourse.Coordinates;
+import ClientServerCommunicaion.sourse.Person;
+import ClientServerCommunicaion.sourse.StudyGroup;
+import ClientServerCommunicaion.sourse.enums.Color;
+import ClientServerCommunicaion.sourse.enums.Country;
+import ClientServerCommunicaion.sourse.enums.FormOfEducation;
+import ClientServerCommunicaion.sourse.enums.Semester;
 
-import javax.xml.bind.*;
-import java.io.*;
 import java.sql.*;
 import java.util.LinkedList;
-import java.util.Scanner;
 
 public class CollectionSaver {
 

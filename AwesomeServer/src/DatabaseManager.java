@@ -1,26 +1,21 @@
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import sourse.*;
-import sourse.enums.*;
+import ClientServerCommunicaion.sourse.*;
+import ClientServerCommunicaion.sourse.enums.*;
 
 import java.sql.*;
 import java.util.LinkedList;
 
 public class DatabaseManager {
 
-    private static final String DB_URL = "jdbc:postgresql://127.0.0.1:5432/studs1";
-    private static final String USER = "postgres";
-    private static final String PASS = "123";
     private static Logger logger = LoggerFactory.getLogger(DatabaseManager.class);
     private Connection connection;
 
     public DatabaseManager(String dbHost, String dbPort, String username, String password) throws SQLException {
-        String dbURL = "jdbc:postgresql://" + dbHost + ":" + dbPort + "/studs1";
+        String dbURL = "jdbc:postgresql://" + dbHost + ":" + dbPort + "/postgres"; //поменять
         System.out.println(dbURL);
         connection = DriverManager.getConnection(dbURL, username, password);
-        //connection = DriverManager.getConnection(DB_URL, USER, PASS);
         logger.info("Database connected");
-
     }
 
     public ResultSet getStudyGroups() throws SQLException {
@@ -149,6 +144,35 @@ public class DatabaseManager {
         getId.setInt(1, (int) id);
         ResultSet idInBase = getId.executeQuery();
         return idInBase.next();
+    }
+
+    public boolean isPassportInBase(String passport) throws SQLException {
+        if (passport == null) return true;
+        Statement statement = connection.createStatement();
+        ResultSet passportSet = statement.executeQuery("select passport_id from person;");
+        boolean inSet = false;
+        while (passportSet.next()) {
+            if (passport.equals(passportSet.getString(1))) {
+                inSet = true;
+                break;
+            }
+        }
+        return inSet;
+    }
+
+    public boolean isPassportInBase(String passport, long id) throws SQLException {
+        if (passport == null) return true;
+        PreparedStatement statement = connection.prepareStatement("select passport_id from person where id<>?;");
+        statement.setInt(1, (int) id);
+        ResultSet passportSet = statement.executeQuery();
+        boolean inSet = false;
+        while (passportSet.next()) {
+            if (passport.equals(passportSet.getString(1))) {
+                inSet = true;
+                break;
+            }
+        }
+        return inSet;
     }
 
 

@@ -1,13 +1,11 @@
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import packets.AwesomeToNicePacket;
-import packets.NiceToAwesomePacket;
+import ClientServerCommunicaion.packets.AwesomeToNicePacket;
 
 import java.io.*;
 import java.net.SocketAddress;
 import java.nio.ByteBuffer;
 import java.nio.channels.DatagramChannel;
-import java.util.Arrays;
 import java.util.concurrent.RecursiveAction;
 
 public class ResponseSender extends RecursiveAction {

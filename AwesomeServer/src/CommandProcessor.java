@@ -1,10 +1,10 @@
 import MailThings.MailSender;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import packets.AwesomeToNicePacket;
-import packets.NiceToAwesomePacket;
-import sourse.*;
-import sourse.enums.*;
+import ClientServerCommunicaion.packets.AwesomeToNicePacket;
+import ClientServerCommunicaion.packets.NiceToAwesomePacket;
+import ClientServerCommunicaion.sourse.*;
+import ClientServerCommunicaion.sourse.enums.*;
 
 import javax.mail.MessagingException;
 import java.nio.channels.DatagramChannel;
@@ -43,13 +43,15 @@ public class CommandProcessor {
     public AwesomeToNicePacket runCommand(NiceToAwesomePacket packet) {
         try {
             String command = packet.getCommand()[0];
-            if (command.equals("register") || command.equals("check") ||
+            logger.info(command);
+            if (command.equals("mailRegister") || command.equals("commonRegister") || command.equals("check") ||
                     database.checkUser(packet.getLogin(), doSomeHash(packet.getPassword()))) {
                 AwesomeToNicePacket nicePacket = null;
                 switch (command) {
                     case "authorize": nicePacket = new AwesomeToNicePacket("Success"); break;
                     case "check": nicePacket = new AwesomeToNicePacket("Done"); break;
-                    case "register": nicePacket = register(packet.getLogin()); break;
+                    case "mailRegister": nicePacket = mailRegister(packet.getLogin()); break;
+                    case "commonRegister": nicePacket = commonRegister(packet.getLogin(), packet.getPassword()); break;
                     case "info": nicePacket = info(); break;
                     case "add": nicePacket = add(packet.getStudyGroup(), packet.getLogin()); break;
                     case "update": nicePacket = update(packet.getCommand()[1], packet.getStudyGroup(), packet.getLogin()); break;
@@ -74,7 +76,13 @@ public class CommandProcessor {
         }
     }
 
-    public AwesomeToNicePacket register(String email) throws SQLException {
+    public AwesomeToNicePacket commonRegister(String login, String password) throws SQLException {
+        if (database.checkLogin(login)) return new AwesomeToNicePacket("inBase");
+        database.registerUser(login, doSomeHash(password));
+        return new AwesomeToNicePacket("success");
+    }
+
+    public AwesomeToNicePacket mailRegister(String email) throws SQLException {
         try {
             int passLength = (int) (Math.random() * 10 + 6);
             StringBuilder passBuilder = new StringBuilder();
@@ -90,6 +98,7 @@ public class CommandProcessor {
             database.registerUser(email, doSomeHash(password));
             return new AwesomeToNicePacket("success");
         } catch (MessagingException e) {
+            e.printStackTrace();
             return new AwesomeToNicePacket("wrong");
         }
     }
@@ -112,29 +121,24 @@ public class CommandProcessor {
     }
 
     public AwesomeToNicePacket add(StudyGroup group, String login) throws SQLException {
-        if (!Person.getPassportIDSet().contains(group.getGroupAdmin().getPassportID()) || group.getGroupAdmin().getPassportID() == null) {
-            database.addGroup(group, login);
-            readWriteLock.writeLock().lock();
-            list.add(group);
-            StudyGroup.getIdSet().add(group.getId());
-            readWriteLock.writeLock().unlock();
-            return new AwesomeToNicePacket("add Succeed");
-        } else {
-            System.out.println(Person.getPassportIDSet());
-            return new AwesomeToNicePacket("add Failed passport");
-        }
+        logger.info(group.getName());
+        if (database.isPassportInBase(group.getGroupAdmin().getPassportID())) return
+                new AwesomeToNicePacket("add Failed passport");
+        logger.info("hi");
+        database.addGroup(group, login);
+        logger.info("hello");
+        readWriteLock.writeLock().lock();
+        list.add(group);
+        StudyGroup.getIdSet().add(group.getId());
+        readWriteLock.writeLock().unlock();
+        return new AwesomeToNicePacket("add Succeed");
     }
 
     public AwesomeToNicePacket update(String id, StudyGroup group, String login) throws SQLException {
         if (!database.isInBase(Long.parseLong(id))) return new AwesomeToNicePacket("update Failed id");
+        if (database.isPassportInBase(group.getGroupAdmin().getPassportID(), Long.parseLong(id))) return
+                new AwesomeToNicePacket("update Failed passport");
         if (!database.checkAccess(Long.parseLong(id), login)) return new AwesomeToNicePacket("update no access");
-        readWriteLock.readLock().lock();
-        if (list.stream()
-                .anyMatch(x -> x.getId() != Long.parseLong(id) && x.getGroupAdmin().getPassportID() != null
-                 && x.getGroupAdmin().getPassportID().equals(group.getGroupAdmin().getPassportID()))) {
-            return new AwesomeToNicePacket("update Failed passport");
-        }
-        readWriteLock.readLock().unlock();
         readWriteLock.writeLock().lock();
         database.update(Integer.parseInt(id), group);
         list = database.load();

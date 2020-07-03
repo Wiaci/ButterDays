@@ -14,8 +14,8 @@ public class ServerMain {
                 awesomeServer = new AwesomeServer(args[0], args[1], args[2], args[3]);
                 awesomeServer.run();
             } else {
-                /*awesomeServer = new AwesomeServer("localhost", "5432", "postgres", "123");
-                awesomeServer.run();*/
+                awesomeServer = new AwesomeServer("localhost", "5432", "postgres", "123");
+                awesomeServer.run();
                 logger.info("Введите аргументы командной строки: HOST PORT USERNAME PASSWORD");
             }
         } catch (IOException e) {

@@ -4,12 +4,9 @@ import java.net.InetSocketAddress;
 import java.net.SocketAddress;
 import java.nio.channels.DatagramChannel;
 import java.sql.SQLException;
-import java.util.concurrent.*;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import packets.AwesomeToNicePacket;
-import packets.NiceToAwesomePacket;
 
 public class AwesomeServer {
     private static Logger logger = LoggerFactory.getLogger(AwesomeServer.class);
