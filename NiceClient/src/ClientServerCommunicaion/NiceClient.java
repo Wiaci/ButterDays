@@ -3,7 +3,6 @@ package ClientServerCommunicaion;
 import ClientServerCommunicaion.packets.AwesomeToNicePacket;
 import ClientServerCommunicaion.packets.NiceToAwesomePacket;
 import ClientServerCommunicaion.sourse.StudyGroup;
-import GUI.GuiManager;
 
 import java.net.*;
 import java.util.HashMap;

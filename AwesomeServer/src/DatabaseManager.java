@@ -18,6 +18,14 @@ public class DatabaseManager {
         logger.info("Database connected");
     }
 
+    public String getOwner(long id) throws SQLException {
+        PreparedStatement getOwn = connection.prepareStatement("select owner_login from study_group where id=?;");
+        getOwn.setInt(1, (int) id);
+        ResultSet owner = getOwn.executeQuery();
+        owner.next();
+        return owner.getString(1);
+    }
+
     public ResultSet getStudyGroups() throws SQLException {
         Statement getAll = connection.createStatement(ResultSet.TYPE_SCROLL_INSENSITIVE, ResultSet.CONCUR_READ_ONLY);
         return getAll.executeQuery("SELECT * FROM STUDY_GROUP;");

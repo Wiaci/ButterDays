@@ -64,6 +64,12 @@ public class StudyGroup implements Comparable<StudyGroup>, Serializable {
                 '\n';
     }
 
+    public String anotherToString(String owner) {
+        return owner + " " + id + " " + name + " " + getX() + " " + getY() + " " + studentsCount + " " + averageMark + " " +
+                formOfEducation + " " + semesterEnum + " " + groupAdmin.getName() + " " + groupAdmin.getWeight() + " " +
+                groupAdmin.getPassportID() + " " + groupAdmin.getEyeColor() + " " + groupAdmin.getNationality();
+    }
+
     public OffsetDateTime getDateOfCreation() {
         return dateOfCreation;
     }

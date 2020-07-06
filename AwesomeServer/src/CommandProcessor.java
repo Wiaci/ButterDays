@@ -44,10 +44,12 @@ public class CommandProcessor {
         try {
             String command = packet.getCommand()[0];
             logger.info(command);
-            if (command.equals("mailRegister") || command.equals("commonRegister") || command.equals("check") ||
+            if (command.equals("getList") || command.equals("mailRegister") || command.equals("commonRegister") ||
+                    command.equals("check") ||
                     database.checkUser(packet.getLogin(), doSomeHash(packet.getPassword()))) {
                 AwesomeToNicePacket nicePacket = null;
                 switch (command) {
+                    case "getList": nicePacket = getList(); break;
                     case "authorize": nicePacket = new AwesomeToNicePacket("Success"); break;
                     case "check": nicePacket = new AwesomeToNicePacket("Done"); break;
                     case "mailRegister": nicePacket = mailRegister(packet.getLogin()); break;
@@ -74,6 +76,24 @@ public class CommandProcessor {
             e.printStackTrace();
             return new AwesomeToNicePacket("butterDays problem");
         }
+    }
+
+    public AwesomeToNicePacket getList() {
+        readWriteLock.readLock().lock();
+        AwesomeToNicePacket packet = new AwesomeToNicePacket(list.stream()
+                .map(s -> {
+                    try {
+                        return s.anotherToString(database.getOwner(s.getId()));
+                    } catch (SQLException e) {
+                        logger.warn("Оказия с базой данных!");
+                        e.printStackTrace();
+                    }
+                    return null;
+                })
+                .collect(Collectors.joining("\n")));
+        readWriteLock.readLock().unlock();
+        System.out.println(packet.getResponse());
+        return packet;
     }
 
     public AwesomeToNicePacket commonRegister(String login, String password) throws SQLException {
@@ -121,17 +141,15 @@ public class CommandProcessor {
     }
 
     public AwesomeToNicePacket add(StudyGroup group, String login) throws SQLException {
-        logger.info(group.getName());
+        System.out.println(group);
         if (database.isPassportInBase(group.getGroupAdmin().getPassportID())) return
-                new AwesomeToNicePacket("add Failed passport");
-        logger.info("hi");
+                new AwesomeToNicePacket("failed");
         database.addGroup(group, login);
-        logger.info("hello");
         readWriteLock.writeLock().lock();
         list.add(group);
         StudyGroup.getIdSet().add(group.getId());
         readWriteLock.writeLock().unlock();
-        return new AwesomeToNicePacket("add Succeed");
+        return new AwesomeToNicePacket(group.getId().toString());
     }
 
     public AwesomeToNicePacket update(String id, StudyGroup group, String login) throws SQLException {
@@ -206,7 +224,7 @@ public class CommandProcessor {
             return packet;
         } else {
             readWriteLock.writeLock().unlock();
-            return new AwesomeToNicePacket("add Failed notMax");
+            return new AwesomeToNicePacket("notMax");
         }
     }
     public AwesomeToNicePacket removeGreater(StudyGroup group, String login) throws SQLException {
@@ -241,16 +259,6 @@ public class CommandProcessor {
        readWriteLock.readLock().unlock();
        return new AwesomeToNicePacket("count_less_than_form_of_education " + count);
     }
-
-    /*public AwesomeToNicePacket show() {
-        readWriteLock.readLock().lock();
-        String s = list.stream()
-                .sorted(Comparator.comparing(StudyGroup::getName))
-                .map(StudyGroup::toString)
-                .collect(Collectors.joining("\n"));
-        readWriteLock.readLock().unlock();
-        return new AwesomeToNicePacket("show " + s);
-    }*/
 
     public AwesomeToNicePacket printFieldAndSoOn() {
         readWriteLock.readLock().lock();

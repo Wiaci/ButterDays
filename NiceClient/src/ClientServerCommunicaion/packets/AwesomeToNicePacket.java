@@ -1,7 +1,6 @@
 package ClientServerCommunicaion.packets;
 
 import java.io.Serializable;
-
 public class AwesomeToNicePacket implements Serializable {
 
     private String response;

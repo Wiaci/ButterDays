@@ -1,21 +1,39 @@
 package GUI;
 
-import ClientServerCommunicaion.packets.AwesomeToNicePacket;
-import ClientServerCommunicaion.sourse.Coordinates;
-import ClientServerCommunicaion.sourse.Person;
-import ClientServerCommunicaion.sourse.StudyGroup;
-import ClientServerCommunicaion.sourse.enums.Color;
-import ClientServerCommunicaion.sourse.enums.Country;
-import ClientServerCommunicaion.sourse.enums.FormOfEducation;
-import ClientServerCommunicaion.sourse.enums.Semester;
+import ClientServerCommunicaion.sourse.*;
+import ClientServerCommunicaion.sourse.enums.*;
 
 import javax.swing.*;
-import java.util.function.Function;
 import java.util.function.Predicate;
 
 public class UserMagicInteract {
 
-    public StudyGroup getStudyGroup(String name, String x, String y, String studentsCount, String averageMark,
+    public static StudyGroup getStudyGroup(JTextField name, JTextField x, JTextField y, JTextField studentsCount,
+                                    JTextField averageMark, JTextField adminName, JTextField weight,
+                                    JTextField passportID, String formOfEducation, String semester,
+                                    String color, String country) {
+        FormOfEducation form = !formOfEducation.isEmpty() ? FormOfEducation.valueOf(formOfEducation) : null;
+        Semester sem = !semester.isEmpty() ? Semester.valueOf(semester) : null;
+        Color eyeColor = !color.isEmpty() ? Color.valueOf(color) : null;
+        Country nation = Country.valueOf(country);
+        String passID = passportID.getText().isEmpty() ? null : passportID.getText();
+        if (checkField(name, s -> !s.isEmpty()) &
+                checkField(x, s -> s.matches("-?\\d{1,10}")) &
+                checkField(y, s -> s.matches("-?\\d{1,10}")) &
+                checkField(studentsCount, s -> s.matches("\\d{1,10}")) &
+                checkField(averageMark, s -> s.matches("\\d{0,10}\\.?\\d{1,10}")) &
+                checkField(adminName, s -> !s.isEmpty()) &
+                checkField(weight, s -> s.matches("\\d{0,10}\\.?\\d{1,10}")) &
+                checkField(passportID, s -> (s.isEmpty() || (s.matches(".{5,20}"))))) {
+            return new StudyGroup(name.getText(), new Coordinates(Integer.parseInt(x.getText()), Integer.parseInt(y.getText())),
+                    Long.parseLong(studentsCount.getText()), Float.parseFloat(averageMark.getText()), form, sem,
+                    new Person(adminName.getText(), Float.parseFloat(weight.getText()), passID,
+                            eyeColor, nation));
+        }
+        return null;
+    }
+
+    /*public StudyGroup getStudyGroup(String name, String x, String y, String studentsCount, String averageMark,
                                     String formOfEducation, String semester, String adminName, String weight,
                                     String passportId, String eyeColor, String nationality) {
         if (passportId.isEmpty()) passportId = null;
@@ -26,15 +44,27 @@ public class UserMagicInteract {
                     Long.parseLong(studentsCount), Float.parseFloat(averageMark), form, sem,
                     new Person(adminName, Float.parseFloat(weight), passportId,
                     color, Country.valueOf(nationality)));
-        }
+        }*/
 
-    public boolean checkField(JTextField field, Predicate<String> predicate) {
+    private static boolean checkField(JTextField field, Predicate<String> predicate) {
         if (predicate.test(field.getText())) {
+            System.out.println(field.getText());
             field.setBackground(java.awt.Color.WHITE);
             return true;
         } else {
             field.setBackground(new java.awt.Color(0xFFBCD1));
             return false;
+        }
+    }
+
+    public static void addToTable(String list, NewTableModel model) {
+        String[] notes = list.split("\n");
+        for (String note : notes) {
+            String[] newRow = note.split(" ");
+            for (int j = 0; j < newRow.length; j++) {
+                if (newRow[j].equals("null")) newRow[j] = "";
+            }
+            model.addRow(newRow);
         }
     }
 
@@ -62,14 +92,12 @@ public class UserMagicInteract {
 
 //TODO: help : вывести справку по доступным командам
 //TODO: info : вывести в стандартный поток вывода информацию о коллекции (тип, дата инициализации, количество элементов и т.д.)
-//TODO: show : вывести в стандартный поток вывода все элементы коллекции в строковом представлении
-//TODO: add {element} : добавить новый элемент в коллекцию
 //TODO: update id {element} : обновить значение элемента коллекции, id которого равен заданному
 //TODO: remove_by_id id : удалить элемент из коллекции по его id
 //TODO: clear : очистить коллекцию
-//TODO: execute_script file_name : считать и исполнить скрипт из указанного файла. В скрипте содержатся команды в таком же виде, в котором их вводит пользователь в интерактивном режиме.
-//TODO: add_if_max {element} : добавить новый элемент в коллекцию, если его значение превышает значение наибольшего элемента этой коллекции
+//TODO: execute_script file_name : считать и исполнить скрипт из указанного файла.
 //TODO: remove_greater {element} : удалить из коллекции все элементы, превышающие заданный
 //TODO: average_of_average_mark : вывести среднее значение поля averageMark для всех элементов коллекции
-//TODO: count_less_than_form_of_education formOfEducation : вывести количество элементов, значение поля formOfEducation которых меньше заданного
+//TODO: count_less_than_form_of_education formOfEducation :
+// вывести количество элементов, значение поля formOfEducation которых меньше заданного
 //TODO: print_field_ascending_semester_enum : вывести значения поля semesterEnum всех элементов в порядке возрастания
