@@ -4,18 +4,24 @@ import ClientServerCommunicaion.packets.AwesomeToNicePacket;
 import ClientServerCommunicaion.packets.NiceToAwesomePacket;
 import ClientServerCommunicaion.sourse.StudyGroup;
 
+import java.awt.*;
 import java.net.*;
 import java.util.HashMap;
 import java.util.LinkedList;
 
 public class NiceClient {
 
+    private HashMap<String, java.awt.Color> colorMap;
     private PacketMaker packetMaker;
     private ResponseAcceptor responseAcceptor;
     private RequestCreator requestCreator;
     private final DatagramSocket socket;
     private InetAddress serverAddress;
     private int port;
+
+    public HashMap<String, java.awt.Color> getColorMap() {
+        return colorMap;
+    }
 
     private NiceToAwesomePacket nicePacket;
 
@@ -48,6 +54,10 @@ public class NiceClient {
         requestCreator.sendResponse(packetRequest, socket, serverAddress, port);
 
         AwesomeToNicePacket packetResponse = responseAcceptor.getResponsePacket();
+        if (packetResponse.getColorMap() != null) {
+            System.out.println(colorMap);
+            colorMap = packetResponse.getColorMap();
+        }
         return packetResponse.getResponse();
     }
 
@@ -57,6 +67,10 @@ public class NiceClient {
         requestCreator.sendResponse(packetRequest, socket, serverAddress, port);
 
         AwesomeToNicePacket packetResponse = responseAcceptor.getResponsePacket();
+        if (packetResponse.getColorMap() != null) {
+            System.out.println(colorMap);
+            colorMap = packetResponse.getColorMap();
+        }
         return packetResponse.getResponse();
     }
 

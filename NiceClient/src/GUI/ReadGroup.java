@@ -12,26 +12,67 @@ import java.util.ResourceBundle;
 
 public class ReadGroup extends AbstractAction {
 
-    NiceClient client;
-    DefaultTableModel model;
-    String login;
-    String password;
-    LanguageSwitcher languageSwitcher;
-    JFrame groupFrame;
-    ResourceBundle bundle;
+    private String login;
+    private String password;
+    private JFrame groupFrame;
+    private LanguageSwitcher lSwitcher;
+    private boolean isAddMode;
+    private JCheckBox isMax;
+    private JTextField nameField;
+    private JTextField xField;
+    private JTextField yField;
+    private JTextField studentsCountField;
+    private JTextField averageMarkField;
+    private JTextField adminNameField;
+    private JTextField weightField;
+    private JTextField passportIdField;
+    private String id;
+    UserMagicInteract magic;
 
-    public ReadGroup(NiceClient client, DefaultTableModel model, String login, String password,
-                     LanguageSwitcher languageSwitcher, ResourceBundle bundle) {
-        this.client = client;
-        this.model = model;
+    public void setLoginAndPassword(String login, String password, UserMagicInteract magic) {
         this.login = login;
         this.password = password;
-        this.languageSwitcher = languageSwitcher;
-        this.bundle = bundle;
+        this.magic = magic;
+    }
 
+    public JFrame getGroupFrame() {
+        return groupFrame;
+    }
+
+    public void setAddMode() {
+        isMax.setVisible(true);
+        lSwitcher.subscribe(groupFrame, "new_group");
+        isAddMode = true;
+        nameField.setText("");
+        xField.setText("");
+        yField.setText("");
+        studentsCountField.setText("");
+        averageMarkField.setText("");
+        adminNameField.setText("");
+        weightField.setText("");
+        passportIdField.setText("");
+    }
+
+    public void setUpdateMode(String[] values, String id) {
+        isAddMode = false;
+
+        this.id = id;
+        isMax.setVisible(false);
+        isMax.setSelected(false);
+        lSwitcher.subscribe(groupFrame, "update");
+        nameField.setText(values[0]);
+        xField.setText(values[1]);
+        yField.setText(values[2]);
+        studentsCountField.setText(values[3]);
+        averageMarkField.setText(values[4]);
+        adminNameField.setText(values[5]);
+        weightField.setText(values[6]);
+        passportIdField.setText(values[7]);
+    }
+
+    public ReadGroup(NiceClient client, LanguageSwitcher languageSwitcher, ResourceBundle bundle) {
+        lSwitcher = languageSwitcher;
         groupFrame = GuiManager.getFrame(300, 500, JFrame.HIDE_ON_CLOSE);
-        languageSwitcher.subscribe(groupFrame, "new_group");
-
         groupFrame.setVisible(false);
         JPanel panel = new JPanel();
         groupFrame.add(panel);
@@ -49,14 +90,14 @@ public class ReadGroup extends AbstractAction {
         JLabel eyeColor = new JLabel(); languageSwitcher.subscribe(eyeColor, "eye_color");
         JLabel country = new JLabel(); languageSwitcher.subscribe(country, "country");
 
-        JTextField nameField = new JTextField(20);
-        JTextField xField = new JTextField(20);
-        JTextField yField = new JTextField(20);
-        JTextField studentsCountField = new JTextField(20);
-        JTextField averageMarkField = new JTextField(20);
-        JTextField adminNameField = new JTextField(20);
-        JTextField weightField = new JTextField(20);
-        JTextField passportIdField = new JTextField(20);
+        nameField = new JTextField(20);
+        xField = new JTextField(20);
+        yField = new JTextField(20);
+        studentsCountField = new JTextField(20);
+        averageMarkField = new JTextField(20);
+        adminNameField = new JTextField(20);
+        weightField = new JTextField(20);
+        passportIdField = new JTextField(20);
 
         JRadioButton form1 = new JRadioButton("DISTANCE_EDUCATION");
         JRadioButton form2 = new JRadioButton("FULL_TIME_EDUCATION");
@@ -166,17 +207,18 @@ public class ReadGroup extends AbstractAction {
         panel.add(new JLabel());
         panel.add(country4);
 
-        JButton submit = new JButton();
-        languageSwitcher.subscribe(submit, "submit");
-        panel.add(submit);
+        JButton submitButton = new JButton();
+        languageSwitcher.subscribe(submitButton, "submit");
+        panel.add(submitButton);
 
-        JCheckBox isMax = new JCheckBox("MAX");
+        isMax = new JCheckBox("MAX");
         panel.add(isMax);
 
         panel.revalidate();
 
+        setAddMode();
 
-        submit.addActionListener(s -> {
+        submitButton.addActionListener(s -> {
 
             String form = null;
             if (form1.isSelected()) form = form1.getText();
@@ -193,9 +235,9 @@ public class ReadGroup extends AbstractAction {
 
             String color = null;
             if (eyeColor1.isSelected()) color = eyeColor1.getText();
-            if (eyeColor2.isSelected()) color = eyeColor1.getText();
-            if (eyeColor3.isSelected()) color = eyeColor1.getText();
-            if (eyeColor4.isSelected()) color = eyeColor1.getText();
+            if (eyeColor2.isSelected()) color = eyeColor2.getText();
+            if (eyeColor3.isSelected()) color = eyeColor3.getText();
+            if (eyeColor4.isSelected()) color = eyeColor4.getText();
             if (color == null) color = "";
 
             String nation = null;
@@ -209,23 +251,45 @@ public class ReadGroup extends AbstractAction {
 
             try {
                 if (group != null) {
-                    String response;
-                    if (isMax.isSelected()) {
-                        response = client.launchCommand("add_if_max", group, login, password);
+                    if (isAddMode) {
+                        String response;
+                        if (isMax.isSelected()) {
+                            response = client.launchCommand("add_if_max", group, login, password);
+                        } else {
+                            System.out.println("add");
+                            response = client.launchCommand("add", group, login, password);
+                        }
+                        if (!response.equals("failed") && !response.equals("notMax")) {
+                            magic.add(new String[] {login, response, nameField.getText(), xField.getText(), yField.getText(),
+                                    studentsCountField.getText(), averageMarkField.getText(), form, sem, adminNameField.getText(),
+                                    weightField.getText(), passportIdField.getText(), color, nation});
+                            groupFrame.setVisible(false);
+                            formNone.setSelected(true);
+                            semesterNone.setSelected(true);
+                            eyeColorNone.setSelected(true);
+                            country1.setSelected(true);
+                        } else if (response.equals("failed")) {
+                            JOptionPane.showMessageDialog(panel, languageSwitcher.getBundle().getString("add_declined_passportID"),
+                                    languageSwitcher.getBundle().getString("error"), JOptionPane.ERROR_MESSAGE);
+                        } else {
+                            JOptionPane.showMessageDialog(panel, languageSwitcher.getBundle().getString("add_declined_not_biggest"),
+                                    languageSwitcher.getBundle().getString("error"), JOptionPane.ERROR_MESSAGE);
+                        }
                     } else {
-                        response = client.launchCommand("add", group, login, password);
-                    }
-                    if (!response.equals("failed") && !response.equals("notMax")) {
-                        model.addRow(new Object[] {login, response, nameField.getText(), xField.getText(), yField.getText(),
-                                studentsCountField.getText(), averageMarkField.getText(), form, sem, adminNameField.getText(),
-                                weightField.getText(), passportIdField.getText(), color, nation});
-                        groupFrame.setVisible(false);
-                    } else if (response.equals("failed")) {
-                        JOptionPane.showMessageDialog(panel, bundle.getString("add_declined_passportID"),
-                                bundle.getString("error"), JOptionPane.ERROR_MESSAGE);
-                    } else {
-                        JOptionPane.showMessageDialog(panel, bundle.getString("add_declined_not_biggest"),
-                                bundle.getString("error"), JOptionPane.ERROR_MESSAGE);
+                        String response = client.launchCommand("update " + id, group, login, password);
+                        if (!response.equals("succeed")) {
+                            JOptionPane.showMessageDialog(panel, languageSwitcher.getBundle().getString("update_declined_passportID"),
+                                    languageSwitcher.getBundle().getString("error"), JOptionPane.ERROR_MESSAGE);
+                        } else {
+                            group.setId(Long.parseLong(id));
+                            magic.update(group, login);
+                            groupFrame.setVisible(false);
+                            setAddMode();
+                            formNone.setSelected(true);
+                            semesterNone.setSelected(true);
+                            eyeColorNone.setSelected(true);
+                            country1.setSelected(true);
+                        }
                     }
                 }
             } catch (SocketTimeoutException ex) {

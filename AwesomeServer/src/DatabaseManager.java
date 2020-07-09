@@ -4,6 +4,7 @@ import ClientServerCommunicaion.sourse.*;
 import ClientServerCommunicaion.sourse.enums.*;
 
 import java.sql.*;
+import java.util.HashMap;
 import java.util.LinkedList;
 
 public class DatabaseManager {
@@ -84,7 +85,10 @@ public class DatabaseManager {
         Statement toInit = connection.createStatement();
         toInit.execute("CREATE TABLE IF NOT EXISTS USERS (\n" +
                 "    LOGIN VARCHAR(50) NOT NULL PRIMARY KEY,\n" +
-                "    PASS VARCHAR(50) NOT NULL\n" +
+                "    PASS VARCHAR(50) NOT NULL,\n" +
+                "    RED INT NOT NULL CHECK(RED>-1 AND RED<256),\n" +
+                "    GREEN INT NOT NULL CHECK(GREEN>-1 AND GREEN<256),\n" +
+                "    BLUE INT NOT NULL CHECK(BLUE>-1 AND BLUE<256)\n" +
                 ");");
         toInit.execute("CREATE TABLE IF NOT EXISTS STUDY_GROUP (\n" +
                 "    ID INT PRIMARY KEY,\n" +
@@ -130,10 +134,33 @@ public class DatabaseManager {
     }
 
     public void registerUser(String login, String password) throws SQLException {
-        PreparedStatement registration = connection.prepareStatement("insert into users values(?, ?)");
+        PreparedStatement registration = connection.prepareStatement("insert into users values(?, ?, ?, ?, ?)");
         registration.setString(1, login);
         registration.setString(2, password);
+        registration.setInt(3, (int) (Math.random() * 256));
+        registration.setInt(4, (int) (Math.random() * 256));
+        registration.setInt(5, (int) (Math.random() * 256));
         registration.execute();
+    }
+
+    public HashMap<String, java.awt.Color> getColorMap() throws SQLException {
+        Statement getColor = connection.createStatement();
+        ResultSet userSet = getColor.executeQuery("select login from users;");
+        HashMap<String, java.awt.Color> colorMap = new HashMap<>();
+        while (userSet.next()) {
+            colorMap.put(userSet.getString(1), getColor(userSet.getString(1)));
+        }
+        return colorMap;
+    }
+
+    public java.awt.Color getColor(String login) throws SQLException {
+        PreparedStatement getColor =
+                connection.prepareStatement("select red, green, blue from users where login=?;");
+        getColor.setString(1, login);
+        ResultSet colorSet = getColor.executeQuery();
+        colorSet.next();
+        return new java.awt.Color(colorSet.getInt(1),
+                colorSet.getInt(2), colorSet.getInt(3));
     }
 
     public boolean checkAccess(long id, String login) throws SQLException {
@@ -286,3 +313,4 @@ public class DatabaseManager {
         }
     }
 }
+

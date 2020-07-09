@@ -3,43 +3,41 @@ package GUI;
 import ClientServerCommunicaion.NiceClient;
 
 import javax.swing.*;
-import javax.swing.plaf.basic.BasicComboBoxRenderer;
-import javax.swing.table.DefaultTableModel;
-import javax.swing.table.TableRowSorter;
+import javax.swing.table.*;
 import java.awt.*;
 import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
 import java.net.SocketTimeoutException;
-import java.util.Locale;
-import java.util.ResourceBundle;
+import java.util.*;
+import java.util.stream.Collectors;
 
 
-public class GuiManager {
+public class GuiManager implements Runnable {
 
     NiceClient client;
+    JFrame mainFrame;
+    JFrame authFrame;
+    JFrame groupFrame;
+
     String login;
     String password;
-    JFrame mainFrame;
     JTable groupTable;
-    DefaultTableModel model;
     JTextField loginField;
-    JFrame authFrame;
     JPasswordField passwordField;
     JLabel message;
     LanguageSwitcher languageSwitcher;
     ResourceBundle bundle;
+    ReadGroup readAction;
+    UserMagicInteract magic;
+    Point point;
+    AreaPanel area;
+    UserPanel userPanel;
+    HashMap<String, Color> colorMap;
 
 
     public GuiManager(NiceClient client) {
         this.client = client;
-        client.checkConnection();
-        languageSwitcher = new LanguageSwitcher();
-        languageSwitcher.setLocale(new Locale("ru"));
-        bundle = languageSwitcher.getBundle();
-
-        mainFrame();
-        authorize();
-        languageSwitcher.updateLabels();
     }
 
     private void authorize() {
@@ -157,8 +155,11 @@ public class GuiManager {
                 if (client.authorize(inputLogin, inputPass)) {
                     login = inputLogin;
                     password = inputPass;
-                    authFrame.setVisible(false);
-                    mainFrame.setVisible(true);
+                    readAction.setLoginAndPassword(login, password, magic);
+                    magic.getActualData(client, login, password);
+                    userPanel.setColor(magic.getColorMap().get(login));
+                    userPanel.setNewName(login);
+                    userPanel.repaint();
                 } else {
                     message.setVisible(true);
                     message.setForeground(new Color(183, 24, 26, 244));
@@ -174,19 +175,26 @@ public class GuiManager {
     }
 
     private void mainFrame() {
-        mainFrame = getFrame(800, 500, 3);
+
+        mainFrame = getFrame(800, 450, 3);
         languageSwitcher.subscribe(mainFrame, "main_frame");
         mainFrame.setLayout(new BorderLayout());
-        JPanel leftPanel = new JPanel(new BorderLayout());
-        groupTable = getGroupTable();
-        leftPanel.add(new JScrollPane(groupTable), BorderLayout.CENTER);
-        leftPanel.setBackground(Color.BLUE);
-        mainFrame.add(leftPanel, BorderLayout.CENTER);
 
-        JPanel rightPanel = new JPanel();
+
+
+        JPanel lowerPanel = new JPanel();
+        lowerPanel.setSize(new Dimension(lowerPanel.getWidth(), 400));
+        lowerPanel.setLayout(new BorderLayout());
+        mainFrame.add(lowerPanel, BorderLayout.CENTER);
+
+        JPanel rightPanel = new JPanel(new GridLayout(5, 1));
         rightPanel.setBackground(Color.RED);
-        mainFrame.add(rightPanel, BorderLayout.EAST);
-        ReadGroup readAction = new ReadGroup(client, model, login, password, languageSwitcher, bundle);
+
+
+        lowerPanel.add(rightPanel, BorderLayout.EAST);
+        readAction = new ReadGroup(client, languageSwitcher, bundle);
+        groupFrame = readAction.getGroupFrame();
+
         JButton addButton = new JButton(readAction);
         languageSwitcher.subscribe(addButton, "add");
 
@@ -223,37 +231,201 @@ public class GuiManager {
         rightPanel.add(latvian);
         rightPanel.add(english);
 
-        rightPanel.add(addButton, BorderLayout.SOUTH);
+        rightPanel.add(addButton, BorderLayout.EAST);
+
         rightPanel.revalidate();
 
-        JPanel lowerPanel = new UserPanel();
-        lowerPanel.setPreferredSize(new Dimension(lowerPanel.getWidth(), 250));
-        mainFrame.add(lowerPanel, BorderLayout.SOUTH);
+        userPanel = new UserPanel();
+        userPanel.setLayout(new BorderLayout());
+        userPanel.setPreferredSize(new Dimension(240, 400));
+        lowerPanel.add(userPanel, BorderLayout.WEST);
+
+        JPanel languagePanel = new JPanel(new GridLayout(2,2));
+        languagePanel.add(russian);
+        languagePanel.add(latvian);
+        languagePanel.add(portuguese);
+        languagePanel.add(english);
+        userPanel.add(languagePanel, BorderLayout.SOUTH);
+
+
+        AreaPanel areaPanel = new AreaPanel(languageSwitcher);
+        area = areaPanel;
+        lowerPanel.add(areaPanel, BorderLayout.CENTER);
+
+        JPanel upperPanel = new JPanel(new BorderLayout());
+        groupTable = getGroupTable();
+        JScrollPane scrollPane = new JScrollPane(groupTable);
+        scrollPane.setPreferredSize(new Dimension(scrollPane.getWidth(), 350));
+        upperPanel.add(scrollPane);
+        upperPanel.setBackground(Color.BLUE);
+        mainFrame.add(upperPanel, BorderLayout.NORTH);
     }
 
-    private JTable getGroupTable() {
-        NewTableModel model = new NewTableModel(new Object[] {"Owner", "ID", "Name", "X", "Y", "Students Count", "Average Mark",
-            "Form of Education", "Semester", "Admin Name", "Weight", "PassportID", "Eye Color", "Country"}, 0);
+    public JTable getGroupTable() {
+        NewTableModel model = new NewTableModel(new Object[]{"Owner", "ID", "Name", "X", "Y", "Students Count", "Average Mark",
+                "Form of Education", "Semester", "Admin Name", "Weight", "PassportID", "Eye Color", "Country"}, 0);
         languageSwitcher.subscribe(model);
         JTable table = new JTable(model);
-        RowSorter<NewTableModel> sorter = new TableRowSorter<>(model);
-        table.setRowSorter(sorter);
+        magic = new UserMagicInteract(model, area);
         table.setAutoResizeMode(JTable.AUTO_RESIZE_ALL_COLUMNS);
-        table.setCellSelectionEnabled(false);
+        table.setCellSelectionEnabled(true);
         table.getTableHeader().setReorderingAllowed(false);
         table.setRowHeight(30);
-        try {
+        table.setFillsViewportHeight(true);
+        JPopupMenu popupMenu = new JPopupMenu();
+        JMenuItem menuItemUpdate = new JMenuItem();
+        languageSwitcher.subscribe(menuItemUpdate, "update_group");
+
+        menuItemUpdate.addActionListener(s -> {
+            int selectedRow = table.getSelectedRow();
+            String user = (String) table.getValueAt(selectedRow, 0);
+            System.out.println(user);
+            if (user.equals(login)) {
+                readAction.setUpdateMode(new String[] {(String) table.getValueAt(selectedRow, 2),
+                                (String) table.getValueAt(selectedRow, 3),
+                                (String) table.getValueAt(selectedRow, 4),
+                                (String) table.getValueAt(selectedRow, 5),
+                                (String) table.getValueAt(selectedRow, 6),
+                                (String) table.getValueAt(selectedRow, 9),
+                                (String) table.getValueAt(selectedRow, 10),
+                                (String) table.getValueAt(selectedRow, 11),
+                                (String) table.getValueAt(selectedRow, 7),
+                                (String) table.getValueAt(selectedRow, 8),
+                                (String) table.getValueAt(selectedRow, 12),
+                                (String) table.getValueAt(selectedRow, 13)},
+                        (String) table.getValueAt(selectedRow, 1));
+                groupFrame.setVisible(true);
+            } else {
+                JOptionPane.showMessageDialog(mainFrame, languageSwitcher.getBundle().getString("no_access"),
+                        languageSwitcher.getBundle().getString("warning"), JOptionPane.WARNING_MESSAGE);
+            }
+        });
+
+        JMenuItem menuItemRemove = new JMenuItem();
+        languageSwitcher.subscribe(menuItemRemove, "remove_group");
+        menuItemRemove.addActionListener(s -> {
+            int selectedRow = table.getSelectedRow();
+            String user = (String) table.getValueAt(selectedRow, 0);
+            System.out.println(user);
+            if (user.equals(login)) {
+                try {
+                    client.launchCommand("remove_by_id " + table.getValueAt(selectedRow, 1),
+                            login, password);
+                    magic.remove((String) table.getValueAt(selectedRow, 1));
+                } catch (SocketTimeoutException e) {
+                    e.printStackTrace();
+                }
+            } else {
+                JOptionPane.showMessageDialog(mainFrame, languageSwitcher.getBundle().getString("no_access"),
+                        languageSwitcher.getBundle().getString("warning"), JOptionPane.WARNING_MESSAGE);
+            }
+        });
+
+        JMenuItem menuItemClear = new JMenuItem();
+        languageSwitcher.subscribe(menuItemClear, "remove_all");
+
+        menuItemClear.addActionListener(s -> {
+            int answer = JOptionPane.showConfirmDialog(
+                    mainFrame, languageSwitcher.getBundle().getString("sure"), "", JOptionPane.YES_NO_OPTION);
+            if (answer == 0) {
+                try {
+                    client.launchCommand("clear", login, password);
+                    magic.clear(login);
+                } catch (SocketTimeoutException e) {
+                    e.printStackTrace();
+                }
+            }
+        });
+
+        popupMenu.add(menuItemUpdate);
+        popupMenu.add(menuItemRemove);
+        popupMenu.add(menuItemClear);
+
+        table.setComponentPopupMenu(popupMenu);
+
+        JPopupMenu headerPopup = new JPopupMenu();
+
+        JMenuItem sort = new JMenuItem();
+        languageSwitcher.subscribe(sort, "sort");
+
+        sort.addActionListener(e -> {
+            int column = table.getTableHeader().columnAtPoint(point);
+            magic.sort(column);
+        });
+
+        JMenuItem filter = new JMenuItem();
+        languageSwitcher.subscribe(filter, "filter...");
+
+        filter.addActionListener(e -> {
+            int column = table.getTableHeader().columnAtPoint(point);
+            filter(column);
+        });
+
+        headerPopup.add(sort);
+        headerPopup.add(filter);
+
+        table.getTableHeader().addMouseListener(new TableHeaderMouseListener(point));
+        table.getTableHeader().setComponentPopupMenu(headerPopup);
+
+        table.addMouseListener(new TableMouseListener(table));
+        /*try {
             String list = client.launchCommand("getList", login, password);
-            UserMagicInteract.addToTable(list, model);
+            System.out.println("Color Map: " + client.getColorMap());
+            magic.updateTable(list);
+            colorMap = client.getColorMap();
+            magic.setColorMap(colorMap);
+            userPanel.setColor(colorMap.get(login));
+            userPanel.setNewName(login);
+            userPanel.repaint();
+            magic.sort(1);
+
         } catch (SocketTimeoutException e) {
             e.printStackTrace();
-        }
-        this.model = model;
+        }*/
         table.setFillsViewportHeight(true);
         return table;
     }
 
+    public void filter(int column) {
+        JFrame filterFrame = getFrame(200, 500, JFrame.HIDE_ON_CLOSE);
+        JPanel panel = new JPanel();
+        filterFrame.add(panel);
+        filterFrame.setTitle(languageSwitcher.getBundle().getString("filter"));
+        HashSet<String> values = magic.getColumnValues(column);
+        System.out.println(values);
+        ArrayList<JCheckBox> checkBoxes = new ArrayList<>();
 
+        values.forEach(s -> checkBoxes.add(new JCheckBox(s)));
+
+        Filter filter = magic.getFilter();
+
+        if (filter.getValues() != null && column == filter.getColumn()) {
+            checkBoxes.stream()
+                    .filter(s -> filter.getValues().contains(s.getText()))
+                    .forEach(s -> s.setSelected(true));
+        }
+
+        System.out.println(checkBoxes.size());
+        checkBoxes.stream()
+                .sorted(Comparator.comparing(AbstractButton::getText))
+                .forEach(panel::add);
+        JCheckBox all = new JCheckBox(languageSwitcher.getBundle().getString("all"));
+        panel.add(all);
+
+        JButton submit = new JButton(languageSwitcher.getBundle().getString("submit"));
+        panel.add(submit);
+
+        submit.addActionListener(e -> {
+            if (all.isSelected()) {
+                magic.setFilter(null, 0);
+            } else {
+                magic.setFilter(checkBoxes.stream()
+                        .filter(AbstractButton::isSelected)
+                        .map(AbstractButton::getText)
+                        .collect(Collectors.toSet()), column);
+            }
+        });
+    }
 
     public static JFrame getFrame(int width, int height, int closingType) {
         JFrame jFrame = new JFrame() {};
@@ -263,6 +435,19 @@ public class GuiManager {
         jFrame.setDefaultCloseOperation(closingType);
         jFrame.setBounds(dimension.width/2 - width/2, dimension.height/2 - height/2, width, height);
         return jFrame;
+    }
+
+    @Override
+    public void run() {
+        client.checkConnection();
+        languageSwitcher = new LanguageSwitcher();
+        languageSwitcher.setLocale(new Locale("ru"));
+        bundle = languageSwitcher.getBundle();
+        point = new Point();
+
+        mainFrame();
+        authorize();
+        languageSwitcher.updateLabels();
     }
 
     class TryToEnter extends AbstractAction {
@@ -288,8 +473,40 @@ public class GuiManager {
             }
         }
     }
+}
 
+class TableMouseListener extends MouseAdapter {
 
+    private JTable table;
+
+    public TableMouseListener(JTable table) {
+        this.table = table;
+    }
+
+    @Override
+    public void mousePressed(MouseEvent event) {
+        Point point = event.getPoint();
+        int currentRow = table.rowAtPoint(point);
+        try {
+            table.setRowSelectionInterval(currentRow, currentRow);
+        } catch (IllegalArgumentException e) {
+            System.out.println("Кликнули мимо таблицы. И ничего плохого в этом нет!");
+        }
+    }
+}
+
+class TableHeaderMouseListener extends MouseAdapter {
+
+    Point point;
+
+    public TableHeaderMouseListener(Point point) {
+        this.point = point;
+    }
+
+    public void mousePressed(MouseEvent event) {
+        System.out.println(event.getPoint());
+        point.setLocation(event.getPoint());
+    }
 }
 
 class NewTableModel extends DefaultTableModel {
@@ -302,3 +519,4 @@ class NewTableModel extends DefaultTableModel {
         return false;
     }
 }
+

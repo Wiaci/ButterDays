@@ -8,19 +8,17 @@ import java.util.*;
 
 public class LanguageSwitcher {
 
-    ResourceBundle bundle;
+    private ResourceBundle bundle;
 
-    HashMap<JLabel, String> labels;
-    HashMap<JButton, String> buttons;
-    HashMap<JFrame, String> frames;
-    HashMap<JRadioButton, String> radioButtons;
-    DefaultTableModel model;
+    private HashMap<JLabel, String> labels;
+    private HashMap<AbstractButton, String> buttons;
+    private HashMap<JFrame, String> frames;
+    private DefaultTableModel model;
 
     public LanguageSwitcher() {
         labels = new HashMap<>();
         buttons = new HashMap<>();
         frames = new HashMap<>();
-        radioButtons = new HashMap<>();
     }
 
     public ResourceBundle getBundle() {
@@ -31,7 +29,7 @@ public class LanguageSwitcher {
         labels.put(label, key);
     }
 
-    public void subscribe(JButton button, String key) {
+    public void subscribe(AbstractButton button, String key) {
         buttons.put(button, key);
     }
 
@@ -39,9 +37,9 @@ public class LanguageSwitcher {
         frames.put(frame, key);
     }
 
-    public void subscribe(JRadioButton radioButton, String key) {
-        radioButtons.put(radioButton, key);
-    }
+    /*public void subscribe(String string, String key) {
+        strings.put(string, key);
+    }*/
 
     public void subscribe(DefaultTableModel model) {
         this.model = model;
@@ -55,14 +53,19 @@ public class LanguageSwitcher {
         Set<JLabel> labelSet = labels.keySet();
         labelSet.forEach(s -> s.setText(bundle.getString(labels.get(s))));
 
-        Set<JButton> buttonSet = buttons.keySet();
+        Set<AbstractButton> buttonSet = buttons.keySet();
         buttonSet.forEach(s -> s.setText(bundle.getString(buttons.get(s))));
 
         Set<JFrame> frameSet = frames.keySet();
         frameSet.forEach(s -> s.setTitle(bundle.getString(frames.get(s))));
 
-        Set<JRadioButton> radioButtonSet = radioButtons.keySet();
-        radioButtonSet.forEach(s -> s.setText(bundle.getString(radioButtons.get(s))));
+        /*Set<String> stringSet = strings.keySet();
+        String[] mass = new String[100];
+        stringSet.toArray(mass);
+        for (int i = 0; i < mass.length; i++) {
+            if (bundle == null) System.out.println("!!!");
+            mass[i] = bundle.getString(strings.get(mass[i]));
+        }*/
 
         model.setColumnIdentifiers(new Object[] {bundle.getString("owner"), bundle.getString("id"),
                 bundle.getString("name"), "X", "Y", bundle.getString("students_count"),

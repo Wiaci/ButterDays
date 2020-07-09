@@ -43,11 +43,13 @@ public class CommandProcessor {
     public AwesomeToNicePacket runCommand(NiceToAwesomePacket packet) {
         try {
             String command = packet.getCommand()[0];
-            logger.info(command);
+            logger.info(packet.getLogin());
+            logger.info(packet.getPassword());
             if (command.equals("getList") || command.equals("mailRegister") || command.equals("commonRegister") ||
                     command.equals("check") ||
                     database.checkUser(packet.getLogin(), doSomeHash(packet.getPassword()))) {
                 AwesomeToNicePacket nicePacket = null;
+                logger.info(command);
                 switch (command) {
                     case "getList": nicePacket = getList(); break;
                     case "authorize": nicePacket = new AwesomeToNicePacket("Success"); break;
@@ -78,7 +80,7 @@ public class CommandProcessor {
         }
     }
 
-    public AwesomeToNicePacket getList() {
+    public AwesomeToNicePacket getList() throws SQLException {
         readWriteLock.readLock().lock();
         AwesomeToNicePacket packet = new AwesomeToNicePacket(list.stream()
                 .map(s -> {
@@ -92,7 +94,8 @@ public class CommandProcessor {
                 })
                 .collect(Collectors.joining("\n")));
         readWriteLock.readLock().unlock();
-        System.out.println(packet.getResponse());
+        packet.setColorMap(database.getColorMap());
+        System.out.println(packet.getColorMap());
         return packet;
     }
 
@@ -153,10 +156,10 @@ public class CommandProcessor {
     }
 
     public AwesomeToNicePacket update(String id, StudyGroup group, String login) throws SQLException {
-        if (!database.isInBase(Long.parseLong(id))) return new AwesomeToNicePacket("update Failed id");
+        if (!database.isInBase(Long.parseLong(id))) return new AwesomeToNicePacket("Failed id");
         if (database.isPassportInBase(group.getGroupAdmin().getPassportID(), Long.parseLong(id))) return
-                new AwesomeToNicePacket("update Failed passport");
-        if (!database.checkAccess(Long.parseLong(id), login)) return new AwesomeToNicePacket("update no access");
+                new AwesomeToNicePacket("failed_passport");
+        if (!database.checkAccess(Long.parseLong(id), login)) return new AwesomeToNicePacket("no_access");
         readWriteLock.writeLock().lock();
         database.update(Integer.parseInt(id), group);
         list = database.load();
@@ -165,7 +168,7 @@ public class CommandProcessor {
         list.forEach(s -> StudyGroup.addId(s.getId()));
         list.forEach(s -> Person.addPassportId(s.getGroupAdmin().getPassportID()));
         readWriteLock.writeLock().unlock();
-        return new AwesomeToNicePacket("update Succeed");
+        return new AwesomeToNicePacket("succeed");
     }
 
     public AwesomeToNicePacket removeByID(String id, String login) throws SQLException {
