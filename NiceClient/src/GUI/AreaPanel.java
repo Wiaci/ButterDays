@@ -4,6 +4,7 @@ import javax.swing.*;
 import java.awt.*;
 import java.awt.event.*;
 import java.awt.geom.AffineTransform;
+import java.awt.geom.Ellipse2D;
 import java.awt.geom.Line2D;
 import java.awt.geom.Rectangle2D;
 import java.util.ArrayList;
@@ -81,6 +82,7 @@ public class AreaPanel extends JPanel {
                 }
             }
         });
+
         addMouseWheelListener(e -> {
             int type = e.getWheelRotation();
             if (type == 1) toDraw.forEach(GroupDescriber::rotationPlus);
@@ -101,9 +103,10 @@ public class AreaPanel extends JPanel {
         AffineTransform transform = g2.getTransform();
         for (GroupDescriber group : toDraw) {
             if (!group.isDeleted()) {
-                g2.rotate(Math.toRadians(group.getRotation()), group.getRotX(), group.getRotY());
+                /*g2.rotate(Math.toRadians(group.getRotation()), group.getRotX(), group.getRotY());
                 g2.setColor(group.getColor());
-                g2.fill(group.getRectangle());
+                g2.fill(group.getRectangle());*/
+                group.drawHumans(g2);
                 g2.setTransform(transform);
             }
         }
@@ -121,6 +124,38 @@ public class AreaPanel extends JPanel {
         g2.drawString("-150", 278, 342);
         g2.drawString("250", 527, 172);
         g2.drawString("-250", -2, 172);
+
+        Point start = new Point(0,0);
+        double n = 200;
+        Rectangle2D edges = new Rectangle2D.Double(start.x, start.y, n, n);
+
+        /*Ellipse2D head1 = new Ellipse2D.Double(start.x, start.y,n * 0.4, n * 0.4);
+        Rectangle2D body1 = new Rectangle2D.Double(0.15 * n + start.x, 0.2 * n, 0.1 * n, 0.6 * n);
+        Rectangle2D arms1 = new Rectangle2D.Double(start.x, 0.55 * n, 0.4 * n, 0.075 * n);
+        Rectangle2D leg1_1 = new Rectangle2D.Double(0.125 * n + start.x, 0.7 * n, 0.075 * n, 0.3 * n);
+        Rectangle2D leg1_2 = new Rectangle2D.Double(0.205 * n + start.x, 0.7 * n, 0.075 * n, 0.3 * n);
+
+        Ellipse2D head2 = new Ellipse2D.Double(start.x + 0.6 * n, start.y,n * 0.4, n * 0.4);
+        Rectangle2D body2 = new Rectangle2D.Double(0.15 * n + start.x + 0.6 * n, 0.2 * n, 0.1 * n, 0.6 * n);
+        Rectangle2D arms2 = new Rectangle2D.Double(start.x + 0.6 * n, 0.55 * n, 0.4 * n, 0.075 * n);
+        Rectangle2D leg2_1 = new Rectangle2D.Double(0.125 * n + start.x + 0.6 * n, 0.7 * n, 0.075 * n, 0.3 * n);
+        Rectangle2D leg2_2 = new Rectangle2D.Double(0.205 * n + start.x + 0.6 * n, 0.7 * n, 0.075 * n, 0.3 * n);
+
+        g2.draw(edges);
+        g2.fill(head1); g2.fill(body1); g2.fill(arms1);
+        g2.rotate(Math.toRadians(20), 0.15 * n, 0.85 * n); g2.fill(leg1_1);
+        g2.setTransform(transform);
+        g2.rotate(Math.toRadians(-20), 0.23 * n, 0.85 * n); g2.fill(leg1_2);
+        g2.setTransform(transform);
+
+        g2.draw(edges);
+        g2.fill(head2); g2.fill(body2); g2.fill(arms2);
+        g2.rotate(Math.toRadians(20), 0.15 * n + 0.6 * n, 0.85 * n); g2.fill(leg2_1);
+        g2.setTransform(transform);
+        g2.rotate(Math.toRadians(-20), 0.23 * n + 0.6 * n, 0.85 * n); g2.fill(leg2_2);
+        g2.setTransform(transform);*/
+        //g2.fill(head2); g2.fill(body2); g2.fill(arms2);
+
 
         checkLocation();
     }

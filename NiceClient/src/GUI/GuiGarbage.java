@@ -166,6 +166,8 @@ public class GuiGarbage implements Runnable {
                      magic = new UserMagicInteract(model, area, client, login, password);
                     readAction.setLoginAndPassword(login, password, magic);
                     magic.getActualData();
+                    UserUpdater updater = new UserUpdater(magic);
+                    (new Thread(updater)).start();
                     area.setInformation(groupTable, login, readAction, groupFrame, mainFrame);
                     ButtonPanel rightPanel = new ButtonPanel(languageSwitcher,
                             readAction, magic, client, login, password, mainFrame);
@@ -428,7 +430,6 @@ public class GuiGarbage implements Runnable {
 
     @Override
     public void run() {
-        client.checkConnection();
         languageSwitcher.setLocale(new Locale("ru"));
         bundle = languageSwitcher.getBundle();
         point = new Point();

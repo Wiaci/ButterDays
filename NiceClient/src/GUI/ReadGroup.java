@@ -6,6 +6,8 @@ import ClientServerCommunicaion.sourse.StudyGroup;
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.ActionEvent;
+import java.awt.event.WindowAdapter;
+import java.awt.event.WindowEvent;
 import java.net.SocketTimeoutException;
 import java.util.ResourceBundle;
 
@@ -72,6 +74,17 @@ public class ReadGroup extends AbstractAction {
     public ReadGroup(NiceClient client, LanguageSwitcher languageSwitcher, ResourceBundle bundle) {
         lSwitcher = languageSwitcher;
         groupFrame = GuiGarbage.getFrame(300, 500, JFrame.HIDE_ON_CLOSE);
+        groupFrame.addWindowListener(new WindowAdapter() {
+            @Override
+            public void windowClosed(WindowEvent e) {
+                setAddMode();
+            }
+
+            @Override
+            public void windowClosing(WindowEvent e) {
+                setAddMode();
+            }
+        });
         groupFrame.setVisible(false);
         JPanel panel = new JPanel();
         groupFrame.add(panel);

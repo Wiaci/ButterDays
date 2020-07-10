@@ -140,12 +140,6 @@ public class ButtonPanel extends JPanel {
             }
         });
 
-        add(printField);
-
-        add(new JLabel());
-
-        add(reload);
-
         languageSwitcher.updateLabels();
     }
 }
