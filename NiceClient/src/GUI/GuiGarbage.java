@@ -13,49 +13,54 @@ import java.util.*;
 import java.util.stream.Collectors;
 
 
-public class GuiManager implements Runnable {
+public class GuiGarbage implements Runnable {
 
-    NiceClient client;
-    JFrame mainFrame;
-    JFrame authFrame;
-    JFrame groupFrame;
+    private NiceClient client;
+    private static JFrame mainFrame;
+    private JFrame authFrame;
+    private JFrame groupFrame;
 
-    String login;
-    String password;
-    JTable groupTable;
-    JTextField loginField;
-    JPasswordField passwordField;
-    JLabel message;
-    LanguageSwitcher languageSwitcher;
-    ResourceBundle bundle;
-    ReadGroup readAction;
-    UserMagicInteract magic;
-    Point point;
-    AreaPanel area;
-    UserPanel userPanel;
-    HashMap<String, Color> colorMap;
+    private String login;
+    private String password;
+    private JTable groupTable;
+    private JTextField loginField;
+    private JPasswordField passwordField;
+    private JLabel message;
+    private static LanguageSwitcher languageSwitcher = new LanguageSwitcher();
+    private ResourceBundle bundle;
+    private ReadGroup readAction;
+    private UserMagicInteract magic;
+    private Point point;
+    private AreaPanel area;
+    private UserPanel userPanel;
+    private DefaultTableModel model;
+    private JPanel lowerPanel;
 
-
-    public GuiManager(NiceClient client) {
+    public GuiGarbage(NiceClient client) {
         this.client = client;
     }
 
     private void authorize() {
         mainFrame.setVisible(false);
-        authFrame = getFrame(200, 150, 3);
+        authFrame = getFrame(200, 200, 3);
+        authFrame.setResizable(false);
         languageSwitcher.subscribe(authFrame, "authorization");
 
         JButton registration = new JButton();
+        registration.setAlignmentX(JComponent.CENTER_ALIGNMENT);
         languageSwitcher.subscribe(registration, "registration");
 
         JButton register = new JButton();
+        register.setAlignmentX(JComponent.CENTER_ALIGNMENT);
         languageSwitcher.subscribe(register, "register");
 
         JButton submit = new JButton();
+        submit.setAlignmentX(JComponent.CENTER_ALIGNMENT);
         languageSwitcher.subscribe(submit,"submit");
         submit.addActionListener(new TryToEnter());
 
         JButton goBack = new JButton();
+        goBack.setAlignmentX(JComponent.CENTER_ALIGNMENT);
         languageSwitcher.subscribe(goBack, "back");
 
         loginField = new JTextField(10);
@@ -64,9 +69,11 @@ public class GuiManager implements Runnable {
         passwordField.addActionListener(new TryToEnter());
 
         JLabel loginLabel = new JLabel();
+        loginLabel.setAlignmentX(JComponent.CENTER_ALIGNMENT);
         languageSwitcher.subscribe(loginLabel, "login");
 
         JLabel passLabel = new JLabel();
+        passLabel.setAlignmentX(JComponent.CENTER_ALIGNMENT);
         languageSwitcher.subscribe(passLabel, "password");
 
         JComboBox<String> language = new JComboBox<>(new String[] {"RU", "LV", "EN_AU", "PT"});
@@ -79,13 +86,14 @@ public class GuiManager implements Runnable {
             else if ("LV".equals(selectedItem)) languageSwitcher.setLocale(new Locale("lv"));
             else if ("PT".equals(selectedItem)) languageSwitcher.setLocale(new Locale("pt"));
             else if ("EN_AU".equals(selectedItem)) languageSwitcher.setLocale(new Locale("en", "AU"));
-
             languageSwitcher.updateLabels();
         });
 
-        message = new JLabel();
+        message = new JLabel(" ");
+        message.setAlignmentX(JComponent.CENTER_ALIGNMENT);
 
         JPanel panel = new JPanel();
+        panel.setLayout(new BoxLayout(panel, BoxLayout.Y_AXIS));
 
         authFrame.add(panel);
         panel.add(loginLabel);
@@ -100,14 +108,14 @@ public class GuiManager implements Runnable {
         panel.add(language);
         register.setVisible(false);
         goBack.setVisible(false);
-        message.setVisible(false);
 
         registration.addActionListener(e -> {
+            loginField.setBackground(Color.WHITE);
+            loginField.setBackground(Color.WHITE);
             registration.setVisible(false);
             submit.setVisible(false);
             register.setVisible(true);
             goBack.setVisible(true);
-            message.setVisible(false);
             authFrame.setTitle(bundle.getString("registration"));
             languageSwitcher.subscribe(authFrame, "registration");
         });
@@ -117,7 +125,7 @@ public class GuiManager implements Runnable {
             submit.setVisible(true);
             register.setVisible(false);
             goBack.setVisible(false);
-            message.setVisible(false);
+            message.setText(" ");
             authFrame.setTitle(bundle.getString("authorization"));
             languageSwitcher.subscribe(authFrame, "authorization");
         });
@@ -126,8 +134,8 @@ public class GuiManager implements Runnable {
             String inputLogin = loginField.getText();
             String inputPass = String.valueOf(passwordField.getPassword());
             try {
-                if (client.register(inputLogin, inputPass)) {
-                    message.setVisible(true);
+                if (!inputLogin.matches("\\s*") && !inputPass.matches("\\s*") &&
+                        client.register(inputLogin, inputPass)) {
                     message.setForeground(new Color(43, 119, 32, 244));
                     message.setText(bundle.getString("register_is_successful"));
                     languageSwitcher.subscribe(message, "register_is_successful");
@@ -138,14 +146,14 @@ public class GuiManager implements Runnable {
                     goBack.setVisible(false);
                     authFrame.setTitle(bundle.getString("authorization"));
                     languageSwitcher.subscribe(authFrame, "authorization");
-                } else {
-                    message.setVisible(true);
+                } else if (!inputLogin.matches("\\s*") && !inputPass.matches("\\s*")) {
                     message.setText(bundle.getString("you_are_in_the_base_now"));
                     languageSwitcher.subscribe(message, "you_are_in_the_base_now");
                 }
             } catch (SocketTimeoutException ex) {
-                ex.printStackTrace();
+                connectionLost();
             }
+            authFrame.pack();
         });
 
         submit.addActionListener(e -> {
@@ -155,19 +163,23 @@ public class GuiManager implements Runnable {
                 if (client.authorize(inputLogin, inputPass)) {
                     login = inputLogin;
                     password = inputPass;
+                     magic = new UserMagicInteract(model, area, client, login, password);
                     readAction.setLoginAndPassword(login, password, magic);
-                    magic.getActualData(client, login, password);
+                    magic.getActualData();
+                    area.setInformation(groupTable, login, readAction, groupFrame, mainFrame);
+                    ButtonPanel rightPanel = new ButtonPanel(languageSwitcher,
+                            readAction, magic, client, login, password, mainFrame);
+                    lowerPanel.add(rightPanel, BorderLayout.EAST);
                     userPanel.setColor(magic.getColorMap().get(login));
                     userPanel.setNewName(login);
                     userPanel.repaint();
                 } else {
-                    message.setVisible(true);
                     message.setForeground(new Color(183, 24, 26, 244));
                     message.setText(bundle.getString("incorrect_login_or_password"));
                     languageSwitcher.subscribe(message, "incorrect_login_or_password");
                 }
             } catch (SocketTimeoutException ex) {
-                ex.printStackTrace();
+                connectionLost();
             }
         });
 
@@ -176,27 +188,21 @@ public class GuiManager implements Runnable {
 
     private void mainFrame() {
 
-        mainFrame = getFrame(800, 450, 3);
+        mainFrame = getFrame(1350, 727, 3);
+        mainFrame.setLocation(0,0);
+
+        mainFrame.setVisible(false);
+        mainFrame.setResizable(false);
         languageSwitcher.subscribe(mainFrame, "main_frame");
         mainFrame.setLayout(new BorderLayout());
 
-
-
-        JPanel lowerPanel = new JPanel();
-        lowerPanel.setSize(new Dimension(lowerPanel.getWidth(), 400));
+        lowerPanel = new JPanel();
+        lowerPanel.setPreferredSize(new Dimension(lowerPanel.getWidth(), 400));
         lowerPanel.setLayout(new BorderLayout());
         mainFrame.add(lowerPanel, BorderLayout.CENTER);
 
-        JPanel rightPanel = new JPanel(new GridLayout(5, 1));
-        rightPanel.setBackground(Color.RED);
-
-
-        lowerPanel.add(rightPanel, BorderLayout.EAST);
         readAction = new ReadGroup(client, languageSwitcher, bundle);
         groupFrame = readAction.getGroupFrame();
-
-        JButton addButton = new JButton(readAction);
-        languageSwitcher.subscribe(addButton, "add");
 
         JButton russian = new JButton();
         languageSwitcher.subscribe(russian, "RU");
@@ -226,17 +232,10 @@ public class GuiManager implements Runnable {
             languageSwitcher.setLocale(new Locale("en", "AU"));
             languageSwitcher.updateLabels();
         });
-        rightPanel.add(russian);
-        rightPanel.add(portuguese);
-        rightPanel.add(latvian);
-        rightPanel.add(english);
-
-        rightPanel.add(addButton, BorderLayout.EAST);
-
-        rightPanel.revalidate();
 
         userPanel = new UserPanel();
         userPanel.setLayout(new BorderLayout());
+        userPanel.setBackground(Color.WHITE);
         userPanel.setPreferredSize(new Dimension(240, 400));
         lowerPanel.add(userPanel, BorderLayout.WEST);
 
@@ -248,9 +247,8 @@ public class GuiManager implements Runnable {
         userPanel.add(languagePanel, BorderLayout.SOUTH);
 
 
-        AreaPanel areaPanel = new AreaPanel(languageSwitcher);
-        area = areaPanel;
-        lowerPanel.add(areaPanel, BorderLayout.CENTER);
+        area = new AreaPanel(languageSwitcher);
+        lowerPanel.add(area, BorderLayout.CENTER);
 
         JPanel upperPanel = new JPanel(new BorderLayout());
         groupTable = getGroupTable();
@@ -262,11 +260,10 @@ public class GuiManager implements Runnable {
     }
 
     public JTable getGroupTable() {
-        NewTableModel model = new NewTableModel(new Object[]{"Owner", "ID", "Name", "X", "Y", "Students Count", "Average Mark",
+        model = new NewTableModel(new Object[]{"Owner", "ID", "Name", "X", "Y", "Students Count", "Average Mark",
                 "Form of Education", "Semester", "Admin Name", "Weight", "PassportID", "Eye Color", "Country"}, 0);
         languageSwitcher.subscribe(model);
         JTable table = new JTable(model);
-        magic = new UserMagicInteract(model, area);
         table.setAutoResizeMode(JTable.AUTO_RESIZE_ALL_COLUMNS);
         table.setCellSelectionEnabled(true);
         table.getTableHeader().setReorderingAllowed(false);
@@ -279,7 +276,6 @@ public class GuiManager implements Runnable {
         menuItemUpdate.addActionListener(s -> {
             int selectedRow = table.getSelectedRow();
             String user = (String) table.getValueAt(selectedRow, 0);
-            System.out.println(user);
             if (user.equals(login)) {
                 readAction.setUpdateMode(new String[] {(String) table.getValueAt(selectedRow, 2),
                                 (String) table.getValueAt(selectedRow, 3),
@@ -306,14 +302,13 @@ public class GuiManager implements Runnable {
         menuItemRemove.addActionListener(s -> {
             int selectedRow = table.getSelectedRow();
             String user = (String) table.getValueAt(selectedRow, 0);
-            System.out.println(user);
             if (user.equals(login)) {
                 try {
                     client.launchCommand("remove_by_id " + table.getValueAt(selectedRow, 1),
                             login, password);
                     magic.remove((String) table.getValueAt(selectedRow, 1));
                 } catch (SocketTimeoutException e) {
-                    e.printStackTrace();
+                    connectionLost();
                 }
             } else {
                 JOptionPane.showMessageDialog(mainFrame, languageSwitcher.getBundle().getString("no_access"),
@@ -332,7 +327,7 @@ public class GuiManager implements Runnable {
                     client.launchCommand("clear", login, password);
                     magic.clear(login);
                 } catch (SocketTimeoutException e) {
-                    e.printStackTrace();
+                    connectionLost();
                 }
             }
         });
@@ -368,31 +363,18 @@ public class GuiManager implements Runnable {
         table.getTableHeader().setComponentPopupMenu(headerPopup);
 
         table.addMouseListener(new TableMouseListener(table));
-        /*try {
-            String list = client.launchCommand("getList", login, password);
-            System.out.println("Color Map: " + client.getColorMap());
-            magic.updateTable(list);
-            colorMap = client.getColorMap();
-            magic.setColorMap(colorMap);
-            userPanel.setColor(colorMap.get(login));
-            userPanel.setNewName(login);
-            userPanel.repaint();
-            magic.sort(1);
-
-        } catch (SocketTimeoutException e) {
-            e.printStackTrace();
-        }*/
         table.setFillsViewportHeight(true);
         return table;
     }
 
     public void filter(int column) {
         JFrame filterFrame = getFrame(200, 500, JFrame.HIDE_ON_CLOSE);
+        filterFrame.setResizable(false);
         JPanel panel = new JPanel();
+        panel.setLayout(new BoxLayout(panel, BoxLayout.Y_AXIS));
         filterFrame.add(panel);
         filterFrame.setTitle(languageSwitcher.getBundle().getString("filter"));
         HashSet<String> values = magic.getColumnValues(column);
-        System.out.println(values);
         ArrayList<JCheckBox> checkBoxes = new ArrayList<>();
 
         values.forEach(s -> checkBoxes.add(new JCheckBox(s)));
@@ -405,7 +387,6 @@ public class GuiManager implements Runnable {
                     .forEach(s -> s.setSelected(true));
         }
 
-        System.out.println(checkBoxes.size());
         checkBoxes.stream()
                 .sorted(Comparator.comparing(AbstractButton::getText))
                 .forEach(panel::add);
@@ -414,6 +395,8 @@ public class GuiManager implements Runnable {
 
         JButton submit = new JButton(languageSwitcher.getBundle().getString("submit"));
         panel.add(submit);
+
+        filterFrame.pack();
 
         submit.addActionListener(e -> {
             if (all.isSelected()) {
@@ -431,16 +414,21 @@ public class GuiManager implements Runnable {
         JFrame jFrame = new JFrame() {};
         Toolkit toolkit = Toolkit.getDefaultToolkit();
         Dimension dimension = toolkit.getScreenSize();
+        //jFrame.setResizable(false);
         jFrame.setVisible(true);
         jFrame.setDefaultCloseOperation(closingType);
         jFrame.setBounds(dimension.width/2 - width/2, dimension.height/2 - height/2, width, height);
         return jFrame;
     }
 
+    public static void connectionLost() {
+        JOptionPane.showMessageDialog(mainFrame, languageSwitcher.getBundle().getString("connection_lost"),
+                languageSwitcher.getBundle().getString("warning"), JOptionPane.WARNING_MESSAGE);
+    }
+
     @Override
     public void run() {
         client.checkConnection();
-        languageSwitcher = new LanguageSwitcher();
         languageSwitcher.setLocale(new Locale("ru"));
         bundle = languageSwitcher.getBundle();
         point = new Point();
@@ -469,7 +457,7 @@ public class GuiManager implements Runnable {
                     languageSwitcher.subscribe(message, "incorrect_login_or_password");
                 }
             } catch (SocketTimeoutException ex) {
-                ex.printStackTrace();
+                connectionLost();
             }
         }
     }
@@ -504,7 +492,6 @@ class TableHeaderMouseListener extends MouseAdapter {
     }
 
     public void mousePressed(MouseEvent event) {
-        System.out.println(event.getPoint());
         point.setLocation(event.getPoint());
     }
 }

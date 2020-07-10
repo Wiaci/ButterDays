@@ -23,16 +23,7 @@ public class ResponseAcceptor {
             socket.receive(packetToReceive);
             return deserialize(codedResponse);
         } catch (SocketTimeoutException e) {
-            if (secondsOfTrying == 0) System.out.print("_______________\r");
-            if (secondsOfTrying < 5) {
-                System.out.print("***");
-                secondsOfTrying++;
-                getResponsePacket();
-            } else {
-                System.out.print("\r");
-                secondsOfTrying = 0;
-                throw new SocketTimeoutException();
-            }
+            throw new SocketTimeoutException();
         } catch (IOException e) {
             e.printStackTrace();
         } catch (ClassNotFoundException e) {

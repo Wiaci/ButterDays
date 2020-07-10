@@ -59,14 +59,6 @@ public class LanguageSwitcher {
         Set<JFrame> frameSet = frames.keySet();
         frameSet.forEach(s -> s.setTitle(bundle.getString(frames.get(s))));
 
-        /*Set<String> stringSet = strings.keySet();
-        String[] mass = new String[100];
-        stringSet.toArray(mass);
-        for (int i = 0; i < mass.length; i++) {
-            if (bundle == null) System.out.println("!!!");
-            mass[i] = bundle.getString(strings.get(mass[i]));
-        }*/
-
         model.setColumnIdentifiers(new Object[] {bundle.getString("owner"), bundle.getString("id"),
                 bundle.getString("name"), "X", "Y", bundle.getString("students_count"),
                 bundle.getString("average_mark"), bundle.getString("form_of_education"),

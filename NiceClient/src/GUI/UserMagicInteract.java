@@ -19,16 +19,35 @@ public class UserMagicInteract {
     private Filter filter;
     private AreaPanel area;
     private HashMap<String, java.awt.Color> colorMap;
+    private NiceClient client;
+    private String login;
+    private String password;
 
     public HashMap<String, java.awt.Color> getColorMap() {
         return colorMap;
     }
 
-    public UserMagicInteract(DefaultTableModel model, AreaPanel area) {
+    public UserMagicInteract(DefaultTableModel model, AreaPanel area, NiceClient client, String login, String password) {
+        this.client = client;
+        this.login = login;
+        this.password = password;
         this.model = model;
         this.area = area;
         groupData = new ArrayList<>();
         filter = new Filter(null, 0);
+    }
+
+    @Override
+    public String toString() {
+        return "UserMagicInteract{" +
+                "model=" + model +
+                ", filter=" + filter +
+                ", area=" + area +
+                ", colorMap=" + colorMap +
+                ", client=" + client +
+                ", login='" + login + '\'' +
+                ", password='" + password + '\'' +
+                '}';
     }
 
     public static StudyGroup getStudyGroup(JTextField name, JTextField x, JTextField y, JTextField studentsCount,
@@ -70,6 +89,14 @@ public class UserMagicInteract {
         return set;
     }
 
+    public String[] getIDs() {
+        String[] ids = new String[groupData.size()];
+        for (int i = 0; i < ids.length; i++) {
+            ids[i] = groupData.get(i)[1];
+        }
+        return ids;
+    }
+
     public void setFilter(Set<String> values, int column) {
         filter = new Filter(values, column);
         updateTable();
@@ -81,18 +108,20 @@ public class UserMagicInteract {
     }
 
 
-    public void add(StudyGroup group, String login) {
+    public void add(StudyGroup group, String login) throws SocketTimeoutException {
         String newGroup = group.anotherToString(login);
         String[] gr = newGroup.split(" ");
         groupData.add(gr);
         /*area.add(new GroupDescriber(gr[1], Double.parseDouble(gr[5]) , Double.parseDouble(gr[3]),
                 Double.parseDouble(gr[4]), colorMap.get(login)));*/
-        updateTable();
+        //updateTable();
+        getActualData();
     }
 
-    public void add(String[] group) {
+    public void add(String[] group) throws SocketTimeoutException {
         groupData.add(group);
         updateTable();
+        getActualData();
     }
 
     public void addOnArea(String[] group) {
@@ -101,31 +130,31 @@ public class UserMagicInteract {
                 Double.parseDouble(group[4]), colorMap.get(group[0])));
     }
 
-    public void update(StudyGroup group, String login) {
+    public void update(StudyGroup group, String login) throws SocketTimeoutException {
         String id = Long.toString(group.getId());
         for (int i = 0; i < groupData.size(); i++) {
             if (groupData.get(i)[1].equals(id)) {
                 String[] gr = group.anotherToString(login).split(" ");
                 groupData.set(i, gr);
-                /*area.add(new GroupDescriber(gr[1], Double.parseDouble(gr[5]) , Double.parseDouble(gr[3]),
-                        Double.parseDouble(gr[4]), colorMap.get(login)));*/
                 break;
             }
         }
-        updateTable();
+        //updateTable();
+        getActualData();
     }
 
     private void updateList(String list) {
         String[] notes = list.replaceFirst("^\n", "").split("\n");
         groupData.clear();
-        for (String note : notes) {
+        /*if (!list.matches("\\s*")) */{
+            for (String note : notes) {
             groupData.add(note.split(" "));
+            }
         }
     }
 
     private static boolean checkField(JTextField field, Predicate<String> predicate) {
         if (predicate.test(field.getText())) {
-            System.out.println(field.getText());
             field.setBackground(java.awt.Color.WHITE);
             return true;
         } else {
@@ -134,7 +163,7 @@ public class UserMagicInteract {
         }
     }
 
-    public void remove(String id) {
+    public void remove(String id) throws SocketTimeoutException {
         for (int i = 0; i < groupData.size(); i++) {
             if (groupData.get(i)[1].equals(id)) {
                 groupData.remove(i);
@@ -142,17 +171,19 @@ public class UserMagicInteract {
                 break;
             }
         }
-        updateTable();
+        getActualData();
+        //updateTable();
     }
 
-    public void clear(String owner) {
+    public void clear(String owner) throws SocketTimeoutException {
         for (int i = groupData.size()-1; i >= 0; i--) {
             if (groupData.get(i)[0].equals(owner)) {
                 area.remove(groupData.get(i)[1]);
-                groupData.remove(i);
+                remove(groupData.get(i)[1]);
             }
         }
-        updateTable();
+        //getActualData();
+        //updateTable();
     }
 
     public static String[] getValuesByID(String id) {
@@ -164,16 +195,11 @@ public class UserMagicInteract {
 
     public void updateTable(String list) {
         updateList(list);
-        /*if (((String) model.getValueAt(0,0)).isEmpty()) {
-            model.removeRow(0);
-            groupData.clear();
-        }*/
-        if (groupData.get(0)[0].isEmpty()) groupData.remove(0);
-        if (groupData.size() == 0) System.out.println("Correct");
+        if (/*groupData.size() != 0 && */groupData.get(0)[0].isEmpty()) groupData.remove(0); //TODO СДЕЛАТЬ ЧТО_НИБУДЬ
         updateTable();
     }
 
-    public void getActualData(NiceClient client, String login, String password) throws SocketTimeoutException {
+    public void getActualData() throws SocketTimeoutException {
         String list = client.launchCommand("getList", login, password);
         colorMap = client.getColorMap();
         setColorMap(colorMap);
@@ -184,11 +210,11 @@ public class UserMagicInteract {
         while (model.getRowCount() > 0) {
             model.removeRow(model.getRowCount() - 1);
         }
+        //groupData.remove(0);
         groupData.forEach(s -> area.add(new GroupDescriber(s[1], Double.parseDouble(s[5]) , Double.parseDouble(s[3]),
                 Double.parseDouble(s[4]), colorMap.get(s[0]))));
         List<String[]> filteredList;
         groupData.forEach(this::addOnArea);
-        System.out.println(area.toDraw);
         if (filter.getValues() != null) {
             filteredList = groupData.stream()
                 .filter(s -> filter.getValues().contains(s[filter.getColumn()]))
@@ -202,7 +228,7 @@ public class UserMagicInteract {
             }
             model.addRow(group);
         }
-
+        area.checkSet(getIDs());
     }
 }
 
@@ -225,11 +251,4 @@ class Filter {
     }
 }
 
-//TODO: help : вывести справку по доступным командам
-//TODO: info : вывести в стандартный поток вывода информацию о коллекции (тип, дата инициализации, количество элементов и т.д.)
-//TODO: execute_script file_name : считать и исполнить скрипт из указанного файла.
-//TODO: remove_greater {element} : удалить из коллекции все элементы, превышающие заданный
-//TODO: average_of_average_mark : вывести среднее значение поля averageMark для всех элементов коллекции
-//TODO: count_less_than_form_of_education formOfEducation :
-// вывести количество элементов, значение поля formOfEducation которых меньше заданного
-//TODO: print_field_ascending_semester_enum : вывести значения поля semesterEnum всех элементов в порядке возрастания
+

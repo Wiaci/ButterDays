@@ -5,6 +5,7 @@ import ClientServerCommunicaion.sourse.enums.*;
 
 import java.sql.*;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.LinkedList;
 
 public class DatabaseManager {
@@ -137,9 +138,23 @@ public class DatabaseManager {
         PreparedStatement registration = connection.prepareStatement("insert into users values(?, ?, ?, ?, ?)");
         registration.setString(1, login);
         registration.setString(2, password);
-        registration.setInt(3, (int) (Math.random() * 256));
-        registration.setInt(4, (int) (Math.random() * 256));
-        registration.setInt(5, (int) (Math.random() * 256));
+        int[] parts = new int[] {0, 64, 128, 192, 255};
+        int red;
+        int green;
+        int blue;
+        HashMap<String, java.awt.Color> colorMap = getColorMap();
+        while (true) {
+            red = parts[(int)(Math.random()*5)];
+            green = parts[(int)(Math.random()*5)];
+            blue = parts[(int)(Math.random()*5)];
+            if (red == 255 && green == 255 && blue == 255) continue;
+            java.awt.Color color = new java.awt.Color(red, green, blue);
+            if (!colorMap.containsValue(color)) break;
+        }
+
+        registration.setInt(3, red);
+        registration.setInt(4, green);
+        registration.setInt(5, blue);
         registration.execute();
     }
 
@@ -182,7 +197,7 @@ public class DatabaseManager {
     }
 
     public boolean isPassportInBase(String passport) throws SQLException {
-        if (passport == null) return true;
+        if (passport == null || passport.equals("null") || passport.isEmpty()) return false;
         Statement statement = connection.createStatement();
         ResultSet passportSet = statement.executeQuery("select passport_id from person;");
         boolean inSet = false;
@@ -196,7 +211,8 @@ public class DatabaseManager {
     }
 
     public boolean isPassportInBase(String passport, long id) throws SQLException {
-        if (passport == null) return true;
+        System.out.println("Passport is: '" + passport + "'");
+        if (passport == null || passport.isEmpty() || passport.equals("null")) return false;
         PreparedStatement statement = connection.prepareStatement("select passport_id from person where id<>?;");
         statement.setInt(1, (int) id);
         ResultSet passportSet = statement.executeQuery();

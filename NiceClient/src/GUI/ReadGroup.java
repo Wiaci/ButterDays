@@ -4,7 +4,6 @@ import ClientServerCommunicaion.NiceClient;
 import ClientServerCommunicaion.sourse.StudyGroup;
 
 import javax.swing.*;
-import javax.swing.table.DefaultTableModel;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.net.SocketTimeoutException;
@@ -72,7 +71,7 @@ public class ReadGroup extends AbstractAction {
 
     public ReadGroup(NiceClient client, LanguageSwitcher languageSwitcher, ResourceBundle bundle) {
         lSwitcher = languageSwitcher;
-        groupFrame = GuiManager.getFrame(300, 500, JFrame.HIDE_ON_CLOSE);
+        groupFrame = GuiGarbage.getFrame(300, 500, JFrame.HIDE_ON_CLOSE);
         groupFrame.setVisible(false);
         JPanel panel = new JPanel();
         groupFrame.add(panel);
@@ -256,7 +255,6 @@ public class ReadGroup extends AbstractAction {
                         if (isMax.isSelected()) {
                             response = client.launchCommand("add_if_max", group, login, password);
                         } else {
-                            System.out.println("add");
                             response = client.launchCommand("add", group, login, password);
                         }
                         if (!response.equals("failed") && !response.equals("notMax")) {

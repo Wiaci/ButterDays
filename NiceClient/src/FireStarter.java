@@ -1,5 +1,5 @@
 import ClientServerCommunicaion.NiceClient;
-import GUI.GuiManager;
+import GUI.GuiGarbage;
 
 import javax.swing.*;
 import java.net.InetAddress;
@@ -12,11 +12,11 @@ public class FireStarter {
         try {
             if (args.length == 2) {
                 NiceClient niceClient = new NiceClient(InetAddress.getByName(args[0]), args[1]);
-                GuiManager gui = new GuiManager(niceClient);
+                GuiGarbage gui = new GuiGarbage(niceClient);
                 SwingUtilities.invokeLater(gui);
             } else {
                 NiceClient niceClient = new NiceClient(InetAddress.getByName("192.168.0.102"), "8000");
-                GuiManager gui = new GuiManager(niceClient);
+                GuiGarbage gui = new GuiGarbage(niceClient);
                 SwingUtilities.invokeLater(gui);
                 //System.out.println("Введите аргументы командной строки: ADDRESS PORT");
             }

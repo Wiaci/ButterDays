@@ -9,8 +9,6 @@ public class GroupDescriber {
 
     private final int NUMBER_OF_STEPS = 60;
 
-    private static HashSet<String> idSet = new HashSet<>();
-
     private String id;
 
     private Rectangle2D rectangle;
@@ -18,7 +16,6 @@ public class GroupDescriber {
 
     private double y;
 
-    private Color aimColor;
     private Color color;
 
 
@@ -51,8 +48,6 @@ public class GroupDescriber {
         this.aimY = -aimY + 175 - size / 2;
         rotX = aimX + 275;
         rotY = -aimY + 175;
-        aimColor = color;
-        System.out.println(color);
         rectangle = new Rectangle2D.Double(this.aimX, this.aimY, size, size);
         state = 1;
 
@@ -76,10 +71,6 @@ public class GroupDescriber {
         return state == 0;
     }
 
-    public static HashSet<String> getIdSet() {
-        return idSet;
-    }
-
     public String getId() {
         return id;
     }
@@ -96,6 +87,9 @@ public class GroupDescriber {
         red -= redStep;
         green -= greenStep;
         blue -= blueStep;
+        if(red <0) red = 0;
+        if(green <0) green = 0;
+        if(blue <0) blue = 0;
         color = new Color((int) red, (int) green, (int) blue);
     }
 
@@ -125,27 +119,35 @@ public class GroupDescriber {
         return rotY;
     }
 
+    public void rotateAndDown() {
+        rotation += 360 / (double) NUMBER_OF_STEPS;
+        rotY = y + size/2;
+        rotX = aimX + size/2;
+    }
+
+    public void rotationPlus() {
+        rotation += 6;
+    }
+
+    public void rotationMinus() {
+        rotation -= 6;
+    }
+
     public void setY(double y) {
         this.y = y;
     }
 
     public void down() {
         y++;
-        rotate();
-        System.out.println("I'm here! " + y);
+        rotateAndDown();
         if (state == 0) opacityMinus();
         else opacityPlus();
         rectangle.setRect(aimX, y, size, size);
     }
 
-    public void rotate() {
-        rotation += 360 / (double) NUMBER_OF_STEPS;
-        rotY = y + size/2;
-        rotX = aimX + size/2;
-    }
+
 
     public void setToAppear() {
-        idSet.add(id);
         y = aimY - NUMBER_OF_STEPS;
         rotY = y + size/2;
         rotX = aimX + size/2;
@@ -171,5 +173,17 @@ public class GroupDescriber {
     @Override
     public int hashCode() {
         return Objects.hash(id, size, aimX, aimY);
+    }
+
+    @Override
+    public String toString() {
+        return "GroupDescriber{" +
+                "id='" + id + '\'' +
+                ", size=" + size +
+                ", y=" + y +
+                ", aimX=" + aimX +
+                ", aimY=" + aimY +
+                ", state=" + state +
+                '}';
     }
 }

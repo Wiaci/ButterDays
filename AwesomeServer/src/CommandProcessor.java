@@ -70,6 +70,7 @@ public class CommandProcessor {
                     case "print_field_ascending_semester_enum": nicePacket = printFieldAndSoOn(); break;
                 }
                 logger.info("Команда {} выполнена", command);
+                logger.info("Ответ: {}", nicePacket.getResponse());
                 return nicePacket;
             }
             return new AwesomeToNicePacket("");
@@ -82,6 +83,11 @@ public class CommandProcessor {
 
     public AwesomeToNicePacket getList() throws SQLException {
         readWriteLock.readLock().lock();
+        list = database.load();
+        StudyGroup.clearIdList();
+        Person.clearPassportIdList();
+        list.forEach(s -> StudyGroup.addId(s.getId()));
+        list.forEach(s -> Person.addPassportId(s.getGroupAdmin().getPassportID()));
         AwesomeToNicePacket packet = new AwesomeToNicePacket(list.stream()
                 .map(s -> {
                     try {
@@ -95,7 +101,6 @@ public class CommandProcessor {
                 .collect(Collectors.joining("\n")));
         readWriteLock.readLock().unlock();
         packet.setColorMap(database.getColorMap());
-        System.out.println(packet.getColorMap());
         return packet;
     }
 
@@ -130,7 +135,7 @@ public class CommandProcessor {
         readWriteLock.readLock().lock();
         int size = list.size();
         readWriteLock.readLock().unlock();
-        return new AwesomeToNicePacket("info " + size);
+        return new AwesomeToNicePacket(Integer.toString(size));
     }
 
     public AwesomeToNicePacket show() {
@@ -144,7 +149,6 @@ public class CommandProcessor {
     }
 
     public AwesomeToNicePacket add(StudyGroup group, String login) throws SQLException {
-        System.out.println(group);
         if (database.isPassportInBase(group.getGroupAdmin().getPassportID())) return
                 new AwesomeToNicePacket("failed");
         database.addGroup(group, login);
@@ -156,10 +160,11 @@ public class CommandProcessor {
     }
 
     public AwesomeToNicePacket update(String id, StudyGroup group, String login) throws SQLException {
-        if (!database.isInBase(Long.parseLong(id))) return new AwesomeToNicePacket("Failed id");
+        logger.info("1");
+        if (!database.isInBase(Long.parseLong(id))) return new AwesomeToNicePacket("Failed id"); logger.info("2");
         if (database.isPassportInBase(group.getGroupAdmin().getPassportID(), Long.parseLong(id))) return
-                new AwesomeToNicePacket("failed_passport");
-        if (!database.checkAccess(Long.parseLong(id), login)) return new AwesomeToNicePacket("no_access");
+                new AwesomeToNicePacket("failed_passport"); logger.info("3");
+        if (!database.checkAccess(Long.parseLong(id), login)) return new AwesomeToNicePacket("no_access"); logger.info("4");
         readWriteLock.writeLock().lock();
         database.update(Integer.parseInt(id), group);
         list = database.load();
@@ -221,7 +226,7 @@ public class CommandProcessor {
         if (list.stream().
                 noneMatch(x -> x.compareTo(group) > 0)) {
             readWriteLock.writeLock().lock();
-            database.addGroup(group, login);
+            //database.addGroup(group, login);
             AwesomeToNicePacket packet = add(group, login);
             readWriteLock.writeLock().unlock();
             return packet;
@@ -249,7 +254,7 @@ public class CommandProcessor {
                 .average()
                 .orElse(0);
         readWriteLock.readLock().unlock();
-        return new AwesomeToNicePacket("average_of_average_mark " + average);
+        return new AwesomeToNicePacket(Float.toString(average));
     }
     public AwesomeToNicePacket countLessAndSoOn(String formOfEducation) {
        readWriteLock.readLock().lock();
@@ -260,7 +265,7 @@ public class CommandProcessor {
                        .compareTo(FormOfEducation.valueOf(formOfEducation)) < 0)
                .count();
        readWriteLock.readLock().unlock();
-       return new AwesomeToNicePacket("count_less_than_form_of_education " + count);
+       return new AwesomeToNicePacket(Long.toString(count));
     }
 
     public AwesomeToNicePacket printFieldAndSoOn() {
@@ -272,7 +277,7 @@ public class CommandProcessor {
                 .map(Enum::toString)
                 .collect(Collectors.joining("\n"));
         readWriteLock.readLock().unlock();
-        return new AwesomeToNicePacket("print_field_ascending_semester_enum " + s);
+        return new AwesomeToNicePacket(s);
     }
 
     private String doSomeHash(String rawPass) {
