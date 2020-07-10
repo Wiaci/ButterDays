@@ -14,7 +14,7 @@ public class DatabaseManager {
     private Connection connection;
 
     public DatabaseManager(String dbHost, String dbPort, String username, String password) throws SQLException {
-        String dbURL = "jdbc:postgresql://" + dbHost + ":" + dbPort + "/postgres"; //поменять
+        String dbURL = "jdbc:postgresql://" + dbHost + ":" + dbPort + "/studs";
         System.out.println(dbURL);
         connection = DriverManager.getConnection(dbURL, username, password);
         logger.info("Database connected");

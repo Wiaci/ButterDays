@@ -15,10 +15,7 @@ public class FireStarter {
                 GuiGarbage gui = new GuiGarbage(niceClient);
                 SwingUtilities.invokeLater(gui);
             } else {
-                NiceClient niceClient = new NiceClient(InetAddress.getByName("192.168.0.102"), "8000");
-                GuiGarbage gui = new GuiGarbage(niceClient);
-                SwingUtilities.invokeLater(gui);
-                //System.out.println("Введите аргументы командной строки: ADDRESS PORT");
+                System.out.println("Введите аргументы командной строки: ADDRESS PORT");
             }
         } catch (UnknownHostException | SocketException e) {
             e.printStackTrace();

@@ -55,7 +55,6 @@ public class NiceClient {
 
         AwesomeToNicePacket packetResponse = responseAcceptor.getResponsePacket();
         if (packetResponse.getColorMap() != null) {
-            System.out.println(colorMap);
             colorMap = packetResponse.getColorMap();
         }
         return packetResponse.getResponse();
@@ -68,7 +67,6 @@ public class NiceClient {
 
         AwesomeToNicePacket packetResponse = responseAcceptor.getResponsePacket();
         if (packetResponse.getColorMap() != null) {
-            System.out.println(colorMap);
             colorMap = packetResponse.getColorMap();
         }
         return packetResponse.getResponse();
